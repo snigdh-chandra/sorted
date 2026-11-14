@@ -2,6 +2,8 @@
 .DS_Store
 *.iml
 .idea/
+__pycache__/
+*.pyc
 
 # Android/Gradle local state
 **/build/
@@ -19,6 +21,10 @@ android/local.properties
 /redacted*.json
 /sorted*.db
 /docs/sms-diagnostic-analysis-*.md
+
+# Private data workspaces; only reviewed public-safe contribution files belong in Git
+/data/private/
+/data/raw/
 
 # Secrets and signing material
 google-services.json

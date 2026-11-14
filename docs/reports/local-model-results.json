@@ -1,0 +1,1439 @@
+{
+  "schema_version": 1,
+  "run_id": "baseline-v2",
+  "report_date": "2026-11-15",
+  "parser_revision": 4,
+  "decision": "Keep deterministic rules. Continue the model experiment with better reviewed coverage.",
+  "dataset": {
+    "curated": 593,
+    "category_candidates": 146,
+    "abstention_candidates": 163,
+    "eligible": 309,
+    "changed_eligible_features": 40,
+    "missing_merchant_before": 20,
+    "missing_merchant_after": 10,
+    "remaining_missing_target": "abstain",
+    "train_named_categories": 31,
+    "train_abstention": 70,
+    "split_quarantine_train": 5,
+    "split_quarantine_validation": 2,
+    "input_label_conflicts": 2
+  },
+  "splits": {
+    "train": {
+      "records": 101,
+      "reviewed_targets": 0
+    },
+    "validation": {
+      "records": 104,
+      "reviewed_targets": 21
+    },
+    "test": {
+      "records": 97,
+      "reviewed_targets": 22
+    }
+  },
+  "systems": [
+    {
+      "id": "char_logreg_merchant_direction",
+      "label": "Character classifier",
+      "inputs": "Merchant + direction",
+      "group": "matched",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 12,
+                "correct_suggestions": 5,
+                "wrong_suggestions": 7,
+                "coverage": 0.12371134020618557,
+                "precision_when_suggesting": 0.4166666666666667,
+                "precision_wilson_95_interval": [
+                  0.19325746190524656,
+                  0.6804926643446272
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 5,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 2
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 3,
+                "correct_suggestions": 2,
+                "wrong_suggestions": 1,
+                "coverage": 0.13636363636363635,
+                "precision_when_suggesting": 0.6666666666666666,
+                "precision_wilson_95_interval": [
+                  0.2076549551264879,
+                  0.9385096847238394
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 2,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 12,
+                "correct_suggestions": 5,
+                "wrong_suggestions": 7,
+                "coverage": 0.12371134020618557,
+                "precision_when_suggesting": 0.4166666666666667,
+                "precision_wilson_95_interval": [
+                  0.19325746190524656,
+                  0.6804926643446272
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 5,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 2
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 3,
+                "correct_suggestions": 2,
+                "wrong_suggestions": 1,
+                "coverage": 0.13636363636363635,
+                "precision_when_suggesting": 0.6666666666666666,
+                "precision_wilson_95_interval": [
+                  0.2076549551264879,
+                  0.9385096847238394
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 2,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "char_logreg_merchant_only",
+      "label": "Character classifier",
+      "inputs": "Merchant only",
+      "group": "merchant_only",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 27,
+                "correct_suggestions": 5,
+                "wrong_suggestions": 22,
+                "coverage": 0.27835051546391754,
+                "precision_when_suggesting": 0.18518518518518517,
+                "precision_wilson_95_interval": [
+                  0.0818058657428532,
+                  0.36699056505191746
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 5,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 16
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 3,
+                "correct_suggestions": 2,
+                "wrong_suggestions": 1,
+                "coverage": 0.13636363636363635,
+                "precision_when_suggesting": 0.6666666666666666,
+                "precision_wilson_95_interval": [
+                  0.2076549551264879,
+                  0.9385096847238394
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 2,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 27,
+                "correct_suggestions": 5,
+                "wrong_suggestions": 22,
+                "coverage": 0.27835051546391754,
+                "precision_when_suggesting": 0.18518518518518517,
+                "precision_wilson_95_interval": [
+                  0.0818058657428532,
+                  0.36699056505191746
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 5,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 16
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 3,
+                "correct_suggestions": 2,
+                "wrong_suggestions": 1,
+                "coverage": 0.13636363636363635,
+                "precision_when_suggesting": 0.6666666666666666,
+                "precision_wilson_95_interval": [
+                  0.2076549551264879,
+                  0.9385096847238394
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 2,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "rules_matched_inputs",
+      "label": "Deterministic rules",
+      "inputs": "Merchant + direction",
+      "group": "matched",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 57,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 17,
+                "coverage": 0.5876288659793815,
+                "precision_when_suggesting": 0.7017543859649122,
+                "precision_wilson_95_interval": [
+                  0.5733547451096314,
+                  0.8046760759075674
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 7
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 20,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 6,
+                "coverage": 0.9090909090909091,
+                "precision_when_suggesting": 0.7,
+                "precision_wilson_95_interval": [
+                  0.4810232237710206,
+                  0.854524726031006
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 57,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 17,
+                "coverage": 0.5876288659793815,
+                "precision_when_suggesting": 0.7017543859649122,
+                "precision_wilson_95_interval": [
+                  0.5733547451096314,
+                  0.8046760759075674
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 7
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 20,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 6,
+                "coverage": 0.9090909090909091,
+                "precision_when_suggesting": 0.7,
+                "precision_wilson_95_interval": [
+                  0.4810232237710206,
+                  0.854524726031006
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "rules_merchant_only",
+      "label": "Deterministic rules",
+      "inputs": "Merchant only",
+      "group": "merchant_only",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 48,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 8,
+                "coverage": 0.4948453608247423,
+                "precision_when_suggesting": 0.8333333333333334,
+                "precision_wilson_95_interval": [
+                  0.7042189996260375,
+                  0.9130458996054678
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 3
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 18,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 4,
+                "coverage": 0.8181818181818182,
+                "precision_when_suggesting": 0.7777777777777778,
+                "precision_wilson_95_interval": [
+                  0.5478497354769452,
+                  0.90999218086618
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 48,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 8,
+                "coverage": 0.4948453608247423,
+                "precision_when_suggesting": 0.8333333333333334,
+                "precision_wilson_95_interval": [
+                  0.7042189996260375,
+                  0.9130458996054678
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 3
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 18,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 4,
+                "coverage": 0.8181818181818182,
+                "precision_when_suggesting": 0.7777777777777778,
+                "precision_wilson_95_interval": [
+                  0.5478497354769452,
+                  0.90999218086618
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "rules_with_payment_mode",
+      "label": "Deterministic rules",
+      "inputs": "Merchant + direction + payment mode",
+      "group": "extra_context",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 70,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 30,
+                "coverage": 0.7216494845360825,
+                "precision_when_suggesting": 0.5714285714285714,
+                "precision_wilson_95_interval": [
+                  0.4547762667382278,
+                  0.6806487511378745
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 19
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 20,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 6,
+                "coverage": 0.9090909090909091,
+                "precision_when_suggesting": 0.7,
+                "precision_wilson_95_interval": [
+                  0.4810232237710206,
+                  0.854524726031006
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 70,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 30,
+                "coverage": 0.7216494845360825,
+                "precision_when_suggesting": 0.5714285714285714,
+                "precision_wilson_95_interval": [
+                  0.4547762667382278,
+                  0.6806487511378745
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 19
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 20,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 6,
+                "coverage": 0.9090909090909091,
+                "precision_when_suggesting": 0.7,
+                "precision_wilson_95_interval": [
+                  0.4810232237710206,
+                  0.854524726031006
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "parser_source_context_diagnostic",
+      "label": "Source-aware parser",
+      "inputs": "Full message context",
+      "group": "source_context",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 70,
+                "correct_suggestions": 40,
+                "wrong_suggestions": 30,
+                "coverage": 0.7216494845360825,
+                "precision_when_suggesting": 0.5714285714285714,
+                "precision_wilson_95_interval": [
+                  0.4547762667382278,
+                  0.6806487511378745
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 40,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 19
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 20,
+                "correct_suggestions": 14,
+                "wrong_suggestions": 6,
+                "coverage": 0.9090909090909091,
+                "precision_when_suggesting": 0.7,
+                "precision_wilson_95_interval": [
+                  0.4810232237710206,
+                  0.854524726031006
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 14,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 0.8,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 68,
+                "correct_suggestions": 45,
+                "wrong_suggestions": 23,
+                "coverage": 0.7010309278350515,
+                "precision_when_suggesting": 0.6617647058823529,
+                "precision_wilson_95_interval": [
+                  0.5433701723652863,
+                  0.7628590875621094
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 45,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 19
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 42,
+                "correct_suggestions": 37,
+                "wrong_suggestions": 5,
+                "coverage": 0.4329896907216495,
+                "precision_when_suggesting": 0.8809523809523809,
+                "precision_wilson_95_interval": [
+                  0.7499931819289246,
+                  0.9480627323498091
+                ],
+                "known_category_records": 58,
+                "known_category_correct": 37,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 2
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 18,
+                "correct_suggestions": 16,
+                "wrong_suggestions": 2,
+                "coverage": 0.8181818181818182,
+                "precision_when_suggesting": 0.8888888888888888,
+                "precision_wilson_95_interval": [
+                  0.6719975513339578,
+                  0.9689811315464172
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 16,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 14,
+                "correct_suggestions": 12,
+                "wrong_suggestions": 2,
+                "coverage": 0.6363636363636364,
+                "precision_when_suggesting": 0.8571428571428571,
+                "precision_wilson_95_interval": [
+                  0.600580922361363,
+                  0.9599069262620787
+                ],
+                "known_category_records": 22,
+                "known_category_correct": 12,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 44,
+            "correct_suggestions": 40,
+            "wrong_suggestions": 4,
+            "coverage": 0.4230769230769231,
+            "precision_when_suggesting": 0.9090909090909091,
+            "precision_wilson_95_interval": [
+              0.7884048060208251,
+              0.9640783885211635
+            ],
+            "known_category_records": 53,
+            "known_category_correct": 40,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "always_abstain",
+      "label": "Always request review",
+      "inputs": "Control",
+      "group": "control",
+      "versions": {
+        "before": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        },
+        "after": {
+          "threshold": 1.000001,
+          "production_gate_met": false,
+          "scopes": {
+            "mixed": {
+              "raw": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 97,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 58,
+                "known_category_correct": 0,
+                "source_insufficient_records": 39,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            },
+            "reviewed": {
+              "raw": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              },
+              "gated": {
+                "records": 22,
+                "suggestions": 0,
+                "correct_suggestions": 0,
+                "wrong_suggestions": 0,
+                "coverage": 0.0,
+                "precision_when_suggesting": null,
+                "precision_wilson_95_interval": null,
+                "known_category_records": 22,
+                "known_category_correct": 0,
+                "source_insufficient_records": 0,
+                "false_suggestions_on_source_insufficient_records": 0
+              }
+            }
+          },
+          "validation_selected": {
+            "records": 104,
+            "suggestions": 0,
+            "correct_suggestions": 0,
+            "wrong_suggestions": 0,
+            "coverage": 0.0,
+            "precision_when_suggesting": null,
+            "precision_wilson_95_interval": null,
+            "known_category_records": 53,
+            "known_category_correct": 0,
+            "source_insufficient_records": 51,
+            "false_suggestions_on_source_insufficient_records": 0
+          }
+        }
+      }
+    }
+  ],
+  "category_coverage": [
+    {
+      "category": "Entertainment",
+      "train": 1,
+      "validation": 3,
+      "test": 2,
+      "all_309_candidates": 6,
+      "priority": "Sparse training support"
+    },
+    {
+      "category": "Fees",
+      "train": 0,
+      "validation": 2,
+      "test": 2,
+      "all_309_candidates": 4,
+      "priority": "No training support"
+    },
+    {
+      "category": "Food",
+      "train": 6,
+      "validation": 10,
+      "test": 11,
+      "all_309_candidates": 27,
+      "priority": "Broaden merchant diversity"
+    },
+    {
+      "category": "Fuel",
+      "train": 0,
+      "validation": 0,
+      "test": 1,
+      "all_309_candidates": 1,
+      "priority": "No training support"
+    },
+    {
+      "category": "Groceries",
+      "train": 11,
+      "validation": 4,
+      "test": 8,
+      "all_309_candidates": 23,
+      "priority": "Broaden merchant diversity"
+    },
+    {
+      "category": "Health",
+      "train": 0,
+      "validation": 1,
+      "test": 0,
+      "all_309_candidates": 1,
+      "priority": "No training support"
+    },
+    {
+      "category": "Income",
+      "train": 0,
+      "validation": 0,
+      "test": 2,
+      "all_309_candidates": 3,
+      "priority": "No training support"
+    },
+    {
+      "category": "Investment",
+      "train": 1,
+      "validation": 3,
+      "test": 3,
+      "all_309_candidates": 9,
+      "priority": "Sparse training support"
+    },
+    {
+      "category": "Refund",
+      "train": 6,
+      "validation": 6,
+      "test": 5,
+      "all_309_candidates": 17,
+      "priority": "Broaden merchant diversity"
+    },
+    {
+      "category": "Rent",
+      "train": 0,
+      "validation": 0,
+      "test": 4,
+      "all_309_candidates": 4,
+      "priority": "No training support"
+    },
+    {
+      "category": "Shopping",
+      "train": 3,
+      "validation": 1,
+      "test": 6,
+      "all_309_candidates": 10,
+      "priority": "Sparse training support"
+    },
+    {
+      "category": "Subscriptions",
+      "train": 0,
+      "validation": 13,
+      "test": 7,
+      "all_309_candidates": 21,
+      "priority": "No training support"
+    },
+    {
+      "category": "Transfer",
+      "train": 0,
+      "validation": 3,
+      "test": 0,
+      "all_309_candidates": 3,
+      "priority": "No training support"
+    },
+    {
+      "category": "Transport",
+      "train": 3,
+      "validation": 1,
+      "test": 5,
+      "all_309_candidates": 9,
+      "priority": "Sparse training support"
+    },
+    {
+      "category": "Utilities",
+      "train": 0,
+      "validation": 6,
+      "test": 2,
+      "all_309_candidates": 8,
+      "priority": "No training support"
+    }
+  ],
+  "unsupported_test_categories": [
+    "Fees",
+    "Fuel",
+    "Income",
+    "Rent",
+    "Subscriptions",
+    "Utilities"
+  ],
+  "parser_checks": {
+    "replayed_messages": 3584,
+    "parser_errors": 0,
+    "newly_recognized": 288,
+    "missing_payee_debits_recovered": 279,
+    "excluded_previous_false_positives": 6,
+    "reviewed_regression_size": 50,
+    "before": {
+      "true_positive": 32,
+      "false_positive": 2,
+      "false_negative": 6,
+      "true_negative": 10
+    },
+    "after": {
+      "true_positive": 38,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 12
+    },
+    "unknown_dividend_totals": 3,
+    "unit_passed": 99,
+    "unit_skipped": 1,
+    "unit_failed": 0,
+    "new_unit_regressions": 38
+  },
+  "fresh_review": {
+    "reserved": 50,
+    "category_examples": 49,
+    "movement_examples": 1,
+    "category_proposals": 11,
+    "abstention_proposals": 38,
+    "human_review_complete": false,
+    "scored": false
+  },
+  "model_artifacts": {
+    "char_logreg_merchant_direction": {
+      "fit_seconds": 0.033443542080931365,
+      "model_bytes": 50515,
+      "warm_local_python_cpu_p50_ms": 0.434083,
+      "warm_local_python_cpu_p95_ms": 0.45648815,
+      "not_android_measurement": true,
+      "vocabulary_fit_on_train_only": true
+    },
+    "char_logreg_merchant_only": {
+      "fit_seconds": 0.022713999962434173,
+      "model_bytes": 49100,
+      "warm_local_python_cpu_p50_ms": 0.388563,
+      "warm_local_python_cpu_p95_ms": 0.4129285,
+      "not_android_measurement": true,
+      "vocabulary_fit_on_train_only": true
+    }
+  },
+  "protocol": {
+    "seed": 20261115,
+    "diagnostic_validation_precision_target": 0.9,
+    "min_validation_suggestions": 5,
+    "production_precision_target": 0.98,
+    "test_reviewed_targets": 22,
+    "test_draft_targets": 75,
+    "input_group_overlap": 0,
+    "template_overlap_allowed": true
+  },
+  "limitations": [
+    "This is a reused diagnostic corpus; most targets are assistant drafts, not an independent accuracy estimate.",
+    "All user-reviewed targets were reserved from training in this inherited protocol. The 31-category-example count describes this split, not all data available.",
+    "The source-aware parser uses more context than merchant-only systems. Compare systems with matching inputs.",
+    "The 50-message parser review guided the fixes and is a regression check. Recognition does not guarantee a usable amount or a confirmed import.",
+    "Fresh review answers are assistant proposals. They remain unscored, and masked business identities need human review.",
+    "Model size and latency describe local Python CPU artifacts; Android runtime size, memory, battery, and latency have not been measured."
+  ],
+  "source_documents": [
+    {
+      "label": "Category benchmark notes",
+      "href": "../category-benchmark-refresh.md"
+    },
+    {
+      "label": "Parser audit notes",
+      "href": "../parser-review-audit.md"
+    },
+    {
+      "label": "Contribute examples",
+      "href": "../data-contributions.md"
+    }
+  ]
+}

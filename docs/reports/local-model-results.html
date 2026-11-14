@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Sorted's local parser and category-model experiment: results, limits, and ways to contribute better examples.">
+  <title>Sorted — Local intelligence results</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #F6F8F2; --band: #E9EFE2; --ink: #17241E; --muted: #566A5E;
+      --rule: rgba(23,36,30,.17); --faint: rgba(23,36,30,.07); --review: #A9522A;
+      --bar: #17241E; --soft-bar: #ACBAAF; --review-fill: rgba(169,82,42,.05);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none; font-variant-numeric: tabular-nums;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #0D2522; --band: #123330; --ink: #E7F0EC; --muted: #A5BAB4;
+      --rule: rgba(231,240,236,.2); --faint: rgba(231,240,236,.07); --review: #D79A3F;
+      --bar: #E7F0EC; --soft-bar: #6B8880; --review-fill: rgba(215,154,63,.05);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-size: 16px; line-height: 1.6; }
+    button, select { font: inherit; }
+    a { color: inherit; text-underline-offset: .22em; }
+    button, a, summary, select { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 3px solid var(--review); outline-offset: 4px; }
+    .skip { position: absolute; top: -80px; padding: 12px 20px; background: var(--ink); color: var(--paper); z-index: 4; }
+    .skip:focus { top: 8px; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 36px; }
+    header { border-bottom: 1px solid var(--rule); }
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 88px; }
+    .brand { font-size: 24px; font-weight: 700; letter-spacing: -.06em; text-decoration: none; }
+    .brand span { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; margin-left: 18px; color: var(--muted); }
+    .actions { display: flex; gap: 8px; }
+    .quiet-button { min-height: 44px; border: 1px solid var(--rule); border-radius: 4px; padding: 8px 14px; color: var(--ink); background: transparent; cursor: pointer; }
+    .quiet-button:hover { background: var(--faint); }
+    nav { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 0 0 18px; color: var(--muted); font-size: 14px; }
+    nav a { display: inline-flex; min-height: 30px; align-items: center; text-decoration: none; }
+    nav a:hover { color: var(--ink); text-decoration: underline; }
+    .hero { padding: 64px 0 46px; }
+    .eyebrow { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; margin: 0 0 20px; }
+    h1 { font-size: clamp(38px, 5.5vw, 66px); line-height: 1.07; letter-spacing: -.055em; font-weight: 600; max-width: 880px; margin: 0 0 24px; }
+    .intro { max-width: 720px; color: var(--muted); font-size: 19px; line-height: 1.65; margin: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 24px; color: var(--muted); font-size: 13px; margin-top: 28px; }
+    .summary { display: grid; grid-template-columns: repeat(4,1fr); border-block: 1px solid var(--rule); }
+    .summary a { text-decoration: none; padding: 24px 20px 24px 0; }
+    .summary a + a { padding-left: 24px; border-left: 1px solid var(--rule); }
+    .summary strong { font-size: 38px; line-height: 1.2; letter-spacing: -.04em; font-weight: 600; display: block; }
+    .summary span { font-size: 13px; color: var(--muted); display: block; margin-top: 5px; }
+    .summary a:hover span { text-decoration: underline; }
+    section { padding: 48px 0; scroll-margin-top: 20px; border-bottom: 1px solid var(--rule); }
+    .section-head { display: grid; grid-template-columns: 1fr 1.1fr; gap: 32px; margin-bottom: 28px; align-items: start; }
+    h2 { font-size: 29px; line-height: 1.2; letter-spacing: -.035em; font-weight: 600; margin: 0; }
+    h3 { font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+    p { margin: 0 0 16px; }
+    .section-head p, .muted { color: var(--muted); }
+    .section-head p { margin: 0; }
+    .controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; align-items: end; margin: 24px 0 18px; }
+    .control-group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .control-label { font-size: 12px; color: var(--muted); }
+    .segmented { display: inline-flex; border: 1px solid var(--rule); border-radius: 4px; padding: 3px; gap: 3px; }
+    .segmented button { border: 0; min-height: 40px; padding: 7px 16px; background: transparent; color: var(--muted); cursor: pointer; border-radius: 2px; }
+    .segmented button[aria-pressed="true"] { color: var(--paper); background: var(--ink); }
+    select { width: 100%; min-width: 0; min-height: 48px; padding: 8px 34px 8px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: 12px; margin: 18px 0; }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .swatch { width: 17px; height: 8px; display: inline-block; background: var(--bar); }
+    .swatch.wrong, .bar-wrong { background: repeating-linear-gradient(135deg,var(--soft-bar),var(--soft-bar) 2px,var(--paper) 2px,var(--paper) 4px); }
+    .swatch.review { background: var(--faint); border: 1px solid var(--rule); }
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; text-align: left; font-size: 14px; }
+    caption { text-align: left; font-size: 13px; color: var(--muted); padding: 0 0 16px; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; white-space: nowrap; }
+    th, td { padding: 17px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    th:first-child, td:first-child { padding-left: 0; }
+    th:last-child, td:last-child { padding-right: 0; }
+    tbody th { text-transform: none; letter-spacing: normal; font-size: 14px; font-weight: 500; color: var(--ink); }
+    .num { text-align: right; white-space: nowrap; }
+    .system { min-width: 270px; }
+    .system strong { font-weight: 600; }
+    .system small { display: block; color: var(--muted); margin: 3px 0 10px; font-size: 12px; }
+    .result-bar { height: 6px; width: 100%; max-width: 290px; display: flex; background: var(--faint); overflow: hidden; }
+    .bar-correct { background: var(--bar); }
+    .bar-wrong { height: 100%; }
+    .context-row { background: var(--faint); }
+    .context-label { display: inline-block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--rule); padding: 1px 5px; margin-left: 8px; vertical-align: middle; }
+    .explain-button { border: 0; background: transparent; color: var(--muted); text-decoration: underline; text-underline-offset: .2em; cursor: pointer; padding: 4px 0; font-size: 12px; min-height: 32px; }
+    .detail-row td { color: var(--muted); font-size: 13px; padding-top: 12px; padding-bottom: 20px; }
+    .detail-row[hidden] { display: none; }
+    .small-note { font-size: 13px; color: var(--muted); max-width: 850px; margin-top: 18px; }
+    .band { background: var(--band); border-block: 1px solid var(--rule); padding: 20px 24px; margin: 28px 0 0; }
+    .band p:last-child { margin: 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .facts { margin: 0; }
+    .facts div { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--rule); padding: 12px 0; font-size: 14px; }
+    .facts dt { color: var(--muted); }
+    .facts dd { margin: 0; text-align: right; font-weight: 600; }
+    .coverage-table { min-width: 650px; }
+    .training-cell { min-width: 160px; }
+    .training-meter { display: flex; gap: 12px; align-items: center; }
+    .training-track { width: 90px; height: 5px; background: var(--faint); }
+    .training-track span { display: block; height: 100%; background: var(--bar); }
+    .pill { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    details { border-bottom: 1px solid var(--rule); padding: 15px 0; }
+    summary { cursor: pointer; font-weight: 500; min-height: 30px; }
+    details p, details ul { color: var(--muted); font-size: 14px; margin: 14px 0 4px; max-width: 850px; }
+    details ul { padding-left: 20px; }
+    details li { margin: 6px 0; }
+    .review-note { border-left: 3px solid var(--review); padding: 20px 24px; background: var(--review-fill); margin-bottom: 28px; }
+    .review-note .eyebrow { color: var(--review); margin-bottom: 8px; }
+    .review-note p:last-child { margin-bottom: 0; }
+    .steps { counter-reset: step; padding: 0; list-style: none; margin: 0; }
+    .steps li { counter-increment: step; padding: 18px 0; display: grid; grid-template-columns: 34px 1fr; gap: 12px; border-top: 1px solid var(--rule); }
+    .steps li::before { content: counter(step, decimal-leading-zero); color: var(--muted); font-size: 12px; padding-top: 4px; }
+    .steps p { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
+    .doc-link { display: inline-flex; align-items: center; min-height: 48px; margin: 20px 18px 0 0; font-size: 14px; font-weight: 600; }
+    footer { padding: 28px 0 48px; color: var(--muted); font-size: 12px; }
+    footer p { margin-bottom: 6px; }
+    code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .85em; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 700px) {
+      .wrap { padding: 0 20px; }
+      .masthead { min-height: 78px; gap: 10px; }
+      .brand { font-size: 23px; }
+      .brand span { display: none; }
+      .quiet-button { padding: 8px 10px; font-size: 13px; }
+      nav { gap: 10px 22px; font-size: 13px; }
+      .hero { padding: 40px 0 30px; }
+      .intro { font-size: 17px; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .summary a, .summary a + a { padding: 20px 14px 20px 0; border-left: 0; }
+      .summary a:nth-child(even) { padding-left: 20px; border-left: 1px solid var(--rule); }
+      .summary a:nth-child(n+3) { border-top: 1px solid var(--rule); }
+      .summary strong { font-size: 32px; }
+      .section-head, .two-col { grid-template-columns: 1fr; gap: 18px; }
+      section { padding: 34px 0; }
+      h2 { font-size: 26px; }
+      .controls { align-items: stretch; }
+      .control-group { flex: 1 1 240px; }
+      .segmented { width: max-content; max-width: 100%; }
+      .segmented button { padding: 7px 12px; font-size: 14px; }
+      .system { min-width: 220px; }
+      .band, .review-note { padding: 18px; }
+    }
+    @media print {
+      :root, :root[data-theme="dark"] { --paper:#fff; --band:#f1f3ef; --ink:#17241E; --muted:#566A5E; --rule:#cbd3ca; --faint:#eef1ec; --bar:#17241E; --soft-bar:#acbaaf; --review:#784022; --review-fill:#fff; color-scheme:light; }
+      .wrap { max-width: none; padding: 0; }
+      .actions, nav, .controls, .explain-button, .skip { display: none; }
+      .hero { padding: 26px 0; }
+      h1 { font-size: 38px; }
+      section { padding: 24px 0; }
+      .table-scroll { overflow: visible; }
+      th, td { padding: 10px 7px; }
+      .system { min-width: 0; }
+      .coverage-table { min-width: 0; }
+      .section-head, .two-col { gap: 20px; }
+      tr, .review-note, .band, .summary { break-inside: avoid; }
+      .result-bar, .training-track, .band { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to results</a>
+  <header>
+    <div class="wrap">
+      <div class="masthead">
+        <a class="brand" href="#main">Sorted<span>Research notes</span></a>
+        <div class="actions">
+          <button class="quiet-button" id="theme-button" type="button" aria-label="Use dark appearance">Dark appearance</button>
+          <button class="quiet-button" id="print-button" type="button">Print report</button>
+        </div>
+      </div>
+      <nav aria-label="Report sections">
+        <a href="#results">Test results</a><a href="#coverage">Data coverage</a><a href="#parser">Parser checks</a><a href="#contribute">Contribute</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" id="main">
+    <div class="hero">
+      <p class="eyebrow">Local intelligence · Experiment 02</p>
+      <h1>Keep the rules.<br>Build a stronger training set.</h1>
+      <p class="intro">The parser now understands more alerts. Our small category classifier still trails deterministic rules. Better reviewed coverage is the next step.</p>
+      <div class="meta"><span>15 November 2026</span><span>SMS parser revision 4</span><span>Local CPU experiment</span><span>No model deployed</span></div>
+    </div>
+    <div class="summary" aria-label="Experiment overview">
+      <a href="#dataset"><strong>593</strong><span>Curated source examples</span></a>
+      <a href="#dataset"><strong>31</strong><span>Named-category training examples</span></a>
+      <a href="#method"><strong>97</strong><span>Messages in the reused test set</span></a>
+      <a href="#fresh-review"><strong>50</strong><span>Fresh proposals awaiting review</span></a>
+    </div>
+    <section id="results">
+      <div class="section-head"><h2>What the test shows</h2><p>Compare systems using the same inputs. Results below include draft labels and reused examples; they measure this diagnostic run, not accuracy on new users.</p></div>
+      <div class="controls">
+        <div class="control-group"><span class="control-label" id="policy-label">Suggestion policy</span><div class="segmented" role="group" aria-labelledby="policy-label"><button type="button" data-policy="raw" aria-pressed="true">Raw diagnostic</button><button type="button" data-policy="gated" aria-pressed="false">Validation gate</button></div></div>
+        <label class="control-group"><span class="control-label">Evaluation labels</span><select id="scope"><option value="mixed">All test examples · mixed label quality</option><option value="reviewed">User-reviewed targets only</option></select></label>
+        <label class="control-group"><span class="control-label">Parser features</span><select id="version"><option value="after">After fixes · revision 4</option><option value="before">Before fixes · paired replay</option></select></label>
+      </div>
+      <p class="small-note" id="policy-note">Raw suggestions expose mistakes. No confidence threshold is used here; these are not proposed automatic decisions.</p>
+      <div class="legend" aria-label="Bar legend"><span><i class="swatch" aria-hidden="true"></i>Correct suggestion</span><span><i class="swatch wrong" aria-hidden="true"></i>Wrong suggestion</span><span><i class="swatch review" aria-hidden="true"></i>Requests review</span></div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable system comparison">
+        <table id="result-table">
+          <caption id="result-caption">Raw diagnostic · after fixes · 97 test examples</caption>
+          <thead><tr><th scope="col">System / input</th><th class="num" scope="col">Correct</th><th class="num" scope="col">Wrong</th><th class="num" scope="col">Review</th><th class="num" scope="col">Precision</th></tr></thead>
+          <tbody id="result-body"><tr><th scope="row" class="system"><strong>Character classifier</strong><small>Merchant + direction</small></th><td class="num">5</td><td class="num">7</td><td class="num">85</td><td class="num">41.7%</td></tr>
+<tr><th scope="row" class="system"><strong>Character classifier</strong><small>Merchant only</small></th><td class="num">5</td><td class="num">22</td><td class="num">70</td><td class="num">18.5%</td></tr>
+<tr><th scope="row" class="system"><strong>Deterministic rules</strong><small>Merchant + direction</small></th><td class="num">40</td><td class="num">17</td><td class="num">40</td><td class="num">70.2%</td></tr>
+<tr><th scope="row" class="system"><strong>Deterministic rules</strong><small>Merchant only</small></th><td class="num">40</td><td class="num">8</td><td class="num">49</td><td class="num">83.3%</td></tr>
+<tr><th scope="row" class="system"><strong>Deterministic rules</strong><small>Merchant + direction + payment mode</small></th><td class="num">40</td><td class="num">30</td><td class="num">27</td><td class="num">57.1%</td></tr>
+<tr><th scope="row" class="system"><strong>Source-aware parser</strong><small>Full message context</small></th><td class="num">45</td><td class="num">23</td><td class="num">29</td><td class="num">66.2%</td></tr>
+<tr><th scope="row" class="system"><strong>Always request review</strong><small>Control</small></th><td class="num">0</td><td class="num">0</td><td class="num">97</td><td class="num">—</td></tr></tbody>
+        </table>
+      </div>
+      <p class="small-note">Precision = correct ÷ all suggestions. Review = test examples − suggestions. A dash means the system offered no suggestions. The source-aware parser uses the full message and is a separate comparison.</p>
+      <p class="sr-only" id="result-status" role="status" aria-live="polite"></p>
+      <div class="band"><h3>No production quality gate passed</h3><p class="muted">No system reached the proposed 98% validation precision target with at least five suggestions. The diagnostic gate is 90%; passing it is not release approval. App confidence thresholds are unchanged.</p></div>
+    </section>
+    <section id="coverage">
+      <div class="section-head"><h2>Where more data helps</h2><p>Training has 31 named-category examples and 70 abstentions. Six categories in the test set have no training support. Prioritise clear, diverse examples for those gaps.</p></div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Category coverage">
+        <table class="coverage-table"><caption>Counts for this grouped diagnostic split. Training excludes all user-reviewed targets under the inherited protocol.</caption><thead><tr><th scope="col">Category</th><th scope="col">Training</th><th class="num" scope="col">Validation</th><th class="num" scope="col">Test</th><th scope="col">Priority</th></tr></thead><tbody id="coverage-body"><tr><th scope="row">Entertainment</th><td class="training-cell"><div class="training-meter"><span>1</span><span class="training-track" aria-hidden="true"><span style="width:9.090909090909092%"></span></span></div></td><td class="num">3</td><td class="num">2</td><td class="pill">Sparse training support</td></tr>
+<tr><th scope="row">Fees</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">2</td><td class="num">2</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Food</th><td class="training-cell"><div class="training-meter"><span>6</span><span class="training-track" aria-hidden="true"><span style="width:54.54545454545455%"></span></span></div></td><td class="num">10</td><td class="num">11</td><td class="pill">Broaden merchant diversity</td></tr>
+<tr><th scope="row">Fuel</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">0</td><td class="num">1</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Groceries</th><td class="training-cell"><div class="training-meter"><span>11</span><span class="training-track" aria-hidden="true"><span style="width:100.0%"></span></span></div></td><td class="num">4</td><td class="num">8</td><td class="pill">Broaden merchant diversity</td></tr>
+<tr><th scope="row">Health</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">1</td><td class="num">0</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Income</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">0</td><td class="num">2</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Investment</th><td class="training-cell"><div class="training-meter"><span>1</span><span class="training-track" aria-hidden="true"><span style="width:9.090909090909092%"></span></span></div></td><td class="num">3</td><td class="num">3</td><td class="pill">Sparse training support</td></tr>
+<tr><th scope="row">Refund</th><td class="training-cell"><div class="training-meter"><span>6</span><span class="training-track" aria-hidden="true"><span style="width:54.54545454545455%"></span></span></div></td><td class="num">6</td><td class="num">5</td><td class="pill">Broaden merchant diversity</td></tr>
+<tr><th scope="row">Rent</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">0</td><td class="num">4</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Shopping</th><td class="training-cell"><div class="training-meter"><span>3</span><span class="training-track" aria-hidden="true"><span style="width:27.272727272727273%"></span></span></div></td><td class="num">1</td><td class="num">6</td><td class="pill">Sparse training support</td></tr>
+<tr><th scope="row">Subscriptions</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">13</td><td class="num">7</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Transfer</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">3</td><td class="num">0</td><td class="pill">No training support</td></tr>
+<tr><th scope="row">Transport</th><td class="training-cell"><div class="training-meter"><span>3</span><span class="training-track" aria-hidden="true"><span style="width:27.272727272727273%"></span></span></div></td><td class="num">1</td><td class="num">5</td><td class="pill">Sparse training support</td></tr>
+<tr><th scope="row">Utilities</th><td class="training-cell"><div class="training-meter"><span>0</span><span class="training-track" aria-hidden="true"><span style="width:0.0%"></span></span></div></td><td class="num">6</td><td class="num">2</td><td class="pill">No training support</td></tr></tbody></table>
+      </div>
+      <p class="small-note">The split, not just collection volume, explains these gaps. Existing reviewed labels can enter a new training protocol once a separate evaluation set is ready. Diverse merchants matter more than repeated copies of one alert.</p>
+    </section>
+    <section id="dataset">
+      <div class="section-head"><h2>What went into training</h2><p>593 source annotations serve different tasks. A financial notice can help test detection without providing a usable merchant category.</p></div>
+      <div class="two-col">
+        <dl class="facts"><div><dt>Curated source annotations</dt><dd>593</dd></div><div><dt>Named-category candidates</dt><dd>146</dd></div><div><dt>Source-insufficient / abstention candidates</dt><dd>163</dd></div><div><dt>Category-task candidate pool</dt><dd>309</dd></div></dl>
+        <dl class="facts"><div><dt>Training used</dt><dd>101</dd></div><div><dt>Validation used</dt><dd>104</dd></div><div><dt>Test used</dt><dd>97</dd></div><div><dt>Overlap exclusions</dt><dd>7</dd></div></dl>
+      </div>
+      <details><summary>Why only 31 category training examples?</summary><p>The inherited merchant-family split reserved all user-reviewed targets for evaluation. Its usable training set contains 31 category examples and 70 abstention examples, all with draft targets. This is the training count for this experiment, not the total data available. Reviewing the fresh set will support a new protocol with reviewed training labels.</p></details>
+      <details><summary>Why were seven examples excluded?</summary><p>Recovered merchant identities exposed overlap across the old partitions. Five training rows and two validation rows were excluded using identity, exact input, and related-event links. Original test membership is unchanged. Both feature versions use the same effective partitions; known group and input overlap is zero.</p></details>
+      <details><summary>What changed after the parser fixes?</summary><p>Features changed for 40 eligible examples. Missing merchants fell from 20 to 10. All ten remaining cases already have abstention targets; no named-category candidate lacks a merchant. Two identical-input label conflicts remain visible for review. Existing reviewed annotations were preserved byte for byte.</p></details>
+    </section>
+    <section id="parser">
+      <div class="section-head"><h2>Parser regression checks</h2><p>Event recognition is separate from category prediction and import approval. The 50 reviewed messages helped develop the fixes, so this is a regression check.</p></div>
+      <div class="two-col">
+        <div class="table-scroll"><table><caption>Completed-event recognition · 50 reviewed examples</caption><thead><tr><th scope="col">Outcome</th><th class="num" scope="col">Before</th><th class="num" scope="col">After</th></tr></thead><tbody><tr><th scope="row">Movement correctly recognised</th><td class="num">32</td><td class="num">38</td></tr><tr><th scope="row">Non-movement incorrectly recognised</th><td class="num">2</td><td class="num">0</td></tr><tr><th scope="row">Movement missed</th><td class="num">6</td><td class="num">0</td></tr><tr><th scope="row">Non-movement correctly excluded</th><td class="num">10</td><td class="num">12</td></tr></tbody></table></div>
+        <dl class="facts"><div><dt>Messages replayed locally</dt><dd>3,584</dd></div><div><dt>Parser errors in replay</dt><dd>0</dd></div><div><dt>Previously missed messages recognised</dt><dd>288</dd></div><div><dt>Bank debits recovered without a payee</dt><dd>279</dd></div><div><dt>Unit tests passed / failed / skipped</dt><dd>99 / 0 / 1</dd></div></dl>
+      </div>
+      <p class="small-note">Three dividend notices confirm a credit but omit the total; amounts remain unknown. Provider confirmations and possible duplicate payment confirmations remain available for review. Refunds remain separate from spend. The full replay is not a fully labeled accuracy test. The skipped unit test is an optional corpus harness; the separate replay covers the private corpus.</p>
+    </section>
+    <section id="method">
+      <div class="section-head"><h2>Read the limits</h2><p>These are useful engineering checks. A fresh, independently reviewed sample and real-phone model measurements are still needed before release.</p></div>
+      <details open><summary>Labels and test reuse</summary><p>The 97-message test includes 22 user-reviewed targets and 75 assistant-only targets. Training uses draft labels under the inherited protocol. Reviewed fields are not blanket verification of every field in a message. The corpus has already informed parser development and earlier experiments.</p></details>
+      <details><summary>Threshold selection and uncertainty</summary><p>Thresholds were selected on validation, using a 90% point-precision target and at least five suggestions. Merchant suggestion rules and both character classifiers failed that gate and therefore abstain in the gated view. The source-aware parser selected 0.8: 40 of 44 validation suggestions and 37 of 42 test suggestions were correct. Its test precision is 88.1%, with an approximate Wilson 95% interval of 75.0–94.8%. This does not establish 98% production precision.</p></details>
+      <details><summary>Models and device performance</summary><p>The experiments used character n-gram TF-IDF and logistic regression, not a fine-tuned language model. The merchant+direction artifact is 50,515 bytes; the merchant-only artifact is 49,100 bytes. Warm local Python CPU p95 was approximately 0.46 ms and 0.41 ms, respectively. Android runtime size, cold start, memory, battery, and inference latency were not measured. No model has been distilled, pruned, quantized, or deployed.</p></details>
+      <details><summary>How to check these numbers</summary><p>Use the aggregate JSON and linked methodology notes. It contains before/after results, label scopes, raw/gated metrics, denominators, category counts, and confidence intervals. Private source messages and row-level predictions are deliberately absent from this public report.</p><p><a href="local-model-results.json" download>Download aggregate JSON</a> · <a href="../category-benchmark-refresh.md">Category benchmark notes</a> · <a href="../parser-review-audit.md">Parser audit notes</a></p></details>
+    </section>
+    <section id="contribute">
+      <div class="section-head"><h2>Help improve the next run</h2><p>Useful contributions cover missing categories, unfamiliar formats, and cases where the correct answer is to request review.</p></div>
+      <div id="fresh-review" class="review-note"><p class="eyebrow">Review pending</p><h3>50 fresh examples are reserved</h3><p class="muted">49 are proposed category examples; one is a provident-fund contribution notice for separate movement review. Their answers are assistant drafts. They have not been used for training, threshold selection, or scoring. Business identities still need review for masked and gateway descriptors.</p></div>
+      <ol class="steps">
+        <li><div><strong>Choose a useful example</strong><p>Start with underrepresented categories, failed or future payments, confirmed refunds, or ambiguous recipients. Include meaningful wording variants.</p></div></li>
+        <li><div><strong>Sanitize before sharing</strong><p>Use synthetic examples or carefully sanitized messages you have permission to share. Replace identities, account details, references, dates, and secrets locally.</p></div></li>
+        <li><div><strong>Label only what the message supports</strong><p>Keep cash evidence, event type, and category separate. Preserve unknown amounts. Personal account ownership and purchase purpose stay out of shared labels.</p></div></li>
+        <li><div><strong>Validate and open a data PR</strong><p>Copy the JSONL examples, run the local validator, and document review status and related examples. Contributions remain candidates until reviewed.</p></div></li>
+      </ol>
+      <a class="doc-link" href="../data-contributions.md">Read the contributor guide →</a><a class="doc-link" href="../../data/contributions/examples/synthetic-samples.jsonl" download>Get the example JSONL →</a>
+    </section>
+  </main>
+  <footer class="wrap"><p>Sorted · Modern Finance Tape · Research snapshot, 15 November 2026.</p><p>Aggregate results only. No private messages, account details, source IDs, or personal file paths. Works offline with no external assets or analytics.</p></footer>
+  <noscript><p class="wrap">Interactive comparisons need JavaScript. The default results and coverage tables are available above. Complete metrics are in <a href="local-model-results.json">the aggregate JSON</a>.</p></noscript>
+  <script type="application/json" id="report-data">{"schema_version":1,"run_id":"baseline-v2","report_date":"2026-11-15","parser_revision":4,"decision":"Keep deterministic rules. Continue the model experiment with better reviewed coverage.","dataset":{"curated":593,"category_candidates":146,"abstention_candidates":163,"eligible":309,"changed_eligible_features":40,"missing_merchant_before":20,"missing_merchant_after":10,"remaining_missing_target":"abstain","train_named_categories":31,"train_abstention":70,"split_quarantine_train":5,"split_quarantine_validation":2,"input_label_conflicts":2},"splits":{"train":{"records":101,"reviewed_targets":0},"validation":{"records":104,"reviewed_targets":21},"test":{"records":97,"reviewed_targets":22}},"systems":[{"id":"char_logreg_merchant_direction","label":"Character classifier","inputs":"Merchant + direction","group":"matched","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":12,"correct_suggestions":5,"wrong_suggestions":7,"coverage":0.12371134020618557,"precision_when_suggesting":0.4166666666666667,"precision_wilson_95_interval":[0.19325746190524656,0.6804926643446272],"known_category_records":58,"known_category_correct":5,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":2},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":3,"correct_suggestions":2,"wrong_suggestions":1,"coverage":0.13636363636363635,"precision_when_suggesting":0.6666666666666666,"precision_wilson_95_interval":[0.2076549551264879,0.9385096847238394],"known_category_records":22,"known_category_correct":2,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":12,"correct_suggestions":5,"wrong_suggestions":7,"coverage":0.12371134020618557,"precision_when_suggesting":0.4166666666666667,"precision_wilson_95_interval":[0.19325746190524656,0.6804926643446272],"known_category_records":58,"known_category_correct":5,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":2},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":3,"correct_suggestions":2,"wrong_suggestions":1,"coverage":0.13636363636363635,"precision_when_suggesting":0.6666666666666666,"precision_wilson_95_interval":[0.2076549551264879,0.9385096847238394],"known_category_records":22,"known_category_correct":2,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}},{"id":"char_logreg_merchant_only","label":"Character classifier","inputs":"Merchant only","group":"merchant_only","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":27,"correct_suggestions":5,"wrong_suggestions":22,"coverage":0.27835051546391754,"precision_when_suggesting":0.18518518518518517,"precision_wilson_95_interval":[0.0818058657428532,0.36699056505191746],"known_category_records":58,"known_category_correct":5,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":16},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":3,"correct_suggestions":2,"wrong_suggestions":1,"coverage":0.13636363636363635,"precision_when_suggesting":0.6666666666666666,"precision_wilson_95_interval":[0.2076549551264879,0.9385096847238394],"known_category_records":22,"known_category_correct":2,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":27,"correct_suggestions":5,"wrong_suggestions":22,"coverage":0.27835051546391754,"precision_when_suggesting":0.18518518518518517,"precision_wilson_95_interval":[0.0818058657428532,0.36699056505191746],"known_category_records":58,"known_category_correct":5,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":16},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":3,"correct_suggestions":2,"wrong_suggestions":1,"coverage":0.13636363636363635,"precision_when_suggesting":0.6666666666666666,"precision_wilson_95_interval":[0.2076549551264879,0.9385096847238394],"known_category_records":22,"known_category_correct":2,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}},{"id":"rules_matched_inputs","label":"Deterministic rules","inputs":"Merchant + direction","group":"matched","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":57,"correct_suggestions":40,"wrong_suggestions":17,"coverage":0.5876288659793815,"precision_when_suggesting":0.7017543859649122,"precision_wilson_95_interval":[0.5733547451096314,0.8046760759075674],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":7},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":20,"correct_suggestions":14,"wrong_suggestions":6,"coverage":0.9090909090909091,"precision_when_suggesting":0.7,"precision_wilson_95_interval":[0.4810232237710206,0.854524726031006],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":57,"correct_suggestions":40,"wrong_suggestions":17,"coverage":0.5876288659793815,"precision_when_suggesting":0.7017543859649122,"precision_wilson_95_interval":[0.5733547451096314,0.8046760759075674],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":7},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":20,"correct_suggestions":14,"wrong_suggestions":6,"coverage":0.9090909090909091,"precision_when_suggesting":0.7,"precision_wilson_95_interval":[0.4810232237710206,0.854524726031006],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}},{"id":"rules_merchant_only","label":"Deterministic rules","inputs":"Merchant only","group":"merchant_only","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":48,"correct_suggestions":40,"wrong_suggestions":8,"coverage":0.4948453608247423,"precision_when_suggesting":0.8333333333333334,"precision_wilson_95_interval":[0.7042189996260375,0.9130458996054678],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":3},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":18,"correct_suggestions":14,"wrong_suggestions":4,"coverage":0.8181818181818182,"precision_when_suggesting":0.7777777777777778,"precision_wilson_95_interval":[0.5478497354769452,0.90999218086618],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":48,"correct_suggestions":40,"wrong_suggestions":8,"coverage":0.4948453608247423,"precision_when_suggesting":0.8333333333333334,"precision_wilson_95_interval":[0.7042189996260375,0.9130458996054678],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":3},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":18,"correct_suggestions":14,"wrong_suggestions":4,"coverage":0.8181818181818182,"precision_when_suggesting":0.7777777777777778,"precision_wilson_95_interval":[0.5478497354769452,0.90999218086618],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}},{"id":"rules_with_payment_mode","label":"Deterministic rules","inputs":"Merchant + direction + payment mode","group":"extra_context","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":70,"correct_suggestions":40,"wrong_suggestions":30,"coverage":0.7216494845360825,"precision_when_suggesting":0.5714285714285714,"precision_wilson_95_interval":[0.4547762667382278,0.6806487511378745],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":19},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":20,"correct_suggestions":14,"wrong_suggestions":6,"coverage":0.9090909090909091,"precision_when_suggesting":0.7,"precision_wilson_95_interval":[0.4810232237710206,0.854524726031006],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":70,"correct_suggestions":40,"wrong_suggestions":30,"coverage":0.7216494845360825,"precision_when_suggesting":0.5714285714285714,"precision_wilson_95_interval":[0.4547762667382278,0.6806487511378745],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":19},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":20,"correct_suggestions":14,"wrong_suggestions":6,"coverage":0.9090909090909091,"precision_when_suggesting":0.7,"precision_wilson_95_interval":[0.4810232237710206,0.854524726031006],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}},{"id":"parser_source_context_diagnostic","label":"Source-aware parser","inputs":"Full message context","group":"source_context","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":70,"correct_suggestions":40,"wrong_suggestions":30,"coverage":0.7216494845360825,"precision_when_suggesting":0.5714285714285714,"precision_wilson_95_interval":[0.4547762667382278,0.6806487511378745],"known_category_records":58,"known_category_correct":40,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":19},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":20,"correct_suggestions":14,"wrong_suggestions":6,"coverage":0.9090909090909091,"precision_when_suggesting":0.7,"precision_wilson_95_interval":[0.4810232237710206,0.854524726031006],"known_category_records":22,"known_category_correct":14,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":0.8,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":68,"correct_suggestions":45,"wrong_suggestions":23,"coverage":0.7010309278350515,"precision_when_suggesting":0.6617647058823529,"precision_wilson_95_interval":[0.5433701723652863,0.7628590875621094],"known_category_records":58,"known_category_correct":45,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":19},"gated":{"records":97,"suggestions":42,"correct_suggestions":37,"wrong_suggestions":5,"coverage":0.4329896907216495,"precision_when_suggesting":0.8809523809523809,"precision_wilson_95_interval":[0.7499931819289246,0.9480627323498091],"known_category_records":58,"known_category_correct":37,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":2}},"reviewed":{"raw":{"records":22,"suggestions":18,"correct_suggestions":16,"wrong_suggestions":2,"coverage":0.8181818181818182,"precision_when_suggesting":0.8888888888888888,"precision_wilson_95_interval":[0.6719975513339578,0.9689811315464172],"known_category_records":22,"known_category_correct":16,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":14,"correct_suggestions":12,"wrong_suggestions":2,"coverage":0.6363636363636364,"precision_when_suggesting":0.8571428571428571,"precision_wilson_95_interval":[0.600580922361363,0.9599069262620787],"known_category_records":22,"known_category_correct":12,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":44,"correct_suggestions":40,"wrong_suggestions":4,"coverage":0.4230769230769231,"precision_when_suggesting":0.9090909090909091,"precision_wilson_95_interval":[0.7884048060208251,0.9640783885211635],"known_category_records":53,"known_category_correct":40,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":3}}}},{"id":"always_abstain","label":"Always request review","inputs":"Control","group":"control","versions":{"before":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}},"after":{"threshold":1.000001,"production_gate_met":false,"scopes":{"mixed":{"raw":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":97,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":58,"known_category_correct":0,"source_insufficient_records":39,"false_suggestions_on_source_insufficient_records":0}},"reviewed":{"raw":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0},"gated":{"records":22,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":22,"known_category_correct":0,"source_insufficient_records":0,"false_suggestions_on_source_insufficient_records":0}}},"validation_selected":{"records":104,"suggestions":0,"correct_suggestions":0,"wrong_suggestions":0,"coverage":0.0,"precision_when_suggesting":null,"precision_wilson_95_interval":null,"known_category_records":53,"known_category_correct":0,"source_insufficient_records":51,"false_suggestions_on_source_insufficient_records":0}}}}],"category_coverage":[{"category":"Entertainment","train":1,"validation":3,"test":2,"all_309_candidates":6,"priority":"Sparse training support"},{"category":"Fees","train":0,"validation":2,"test":2,"all_309_candidates":4,"priority":"No training support"},{"category":"Food","train":6,"validation":10,"test":11,"all_309_candidates":27,"priority":"Broaden merchant diversity"},{"category":"Fuel","train":0,"validation":0,"test":1,"all_309_candidates":1,"priority":"No training support"},{"category":"Groceries","train":11,"validation":4,"test":8,"all_309_candidates":23,"priority":"Broaden merchant diversity"},{"category":"Health","train":0,"validation":1,"test":0,"all_309_candidates":1,"priority":"No training support"},{"category":"Income","train":0,"validation":0,"test":2,"all_309_candidates":3,"priority":"No training support"},{"category":"Investment","train":1,"validation":3,"test":3,"all_309_candidates":9,"priority":"Sparse training support"},{"category":"Refund","train":6,"validation":6,"test":5,"all_309_candidates":17,"priority":"Broaden merchant diversity"},{"category":"Rent","train":0,"validation":0,"test":4,"all_309_candidates":4,"priority":"No training support"},{"category":"Shopping","train":3,"validation":1,"test":6,"all_309_candidates":10,"priority":"Sparse training support"},{"category":"Subscriptions","train":0,"validation":13,"test":7,"all_309_candidates":21,"priority":"No training support"},{"category":"Transfer","train":0,"validation":3,"test":0,"all_309_candidates":3,"priority":"No training support"},{"category":"Transport","train":3,"validation":1,"test":5,"all_309_candidates":9,"priority":"Sparse training support"},{"category":"Utilities","train":0,"validation":6,"test":2,"all_309_candidates":8,"priority":"No training support"}],"unsupported_test_categories":["Fees","Fuel","Income","Rent","Subscriptions","Utilities"],"parser_checks":{"replayed_messages":3584,"parser_errors":0,"newly_recognized":288,"missing_payee_debits_recovered":279,"excluded_previous_false_positives":6,"reviewed_regression_size":50,"before":{"true_positive":32,"false_positive":2,"false_negative":6,"true_negative":10},"after":{"true_positive":38,"false_positive":0,"false_negative":0,"true_negative":12},"unknown_dividend_totals":3,"unit_passed":99,"unit_skipped":1,"unit_failed":0,"new_unit_regressions":38},"fresh_review":{"reserved":50,"category_examples":49,"movement_examples":1,"category_proposals":11,"abstention_proposals":38,"human_review_complete":false,"scored":false},"model_artifacts":{"char_logreg_merchant_direction":{"fit_seconds":0.033443542080931365,"model_bytes":50515,"warm_local_python_cpu_p50_ms":0.434083,"warm_local_python_cpu_p95_ms":0.45648815,"not_android_measurement":true,"vocabulary_fit_on_train_only":true},"char_logreg_merchant_only":{"fit_seconds":0.022713999962434173,"model_bytes":49100,"warm_local_python_cpu_p50_ms":0.388563,"warm_local_python_cpu_p95_ms":0.4129285,"not_android_measurement":true,"vocabulary_fit_on_train_only":true}},"protocol":{"seed":20261115,"diagnostic_validation_precision_target":0.9,"min_validation_suggestions":5,"production_precision_target":0.98,"test_reviewed_targets":22,"test_draft_targets":75,"input_group_overlap":0,"template_overlap_allowed":true},"limitations":["This is a reused diagnostic corpus; most targets are assistant drafts, not an independent accuracy estimate.","All user-reviewed targets were reserved from training in this inherited protocol. The 31-category-example count describes this split, not all data available.","The source-aware parser uses more context than merchant-only systems. Compare systems with matching inputs.","The 50-message parser review guided the fixes and is a regression check. Recognition does not guarantee a usable amount or a confirmed import.","Fresh review answers are assistant proposals. They remain unscored, and masked business identities need human review.","Model size and latency describe local Python CPU artifacts; Android runtime size, memory, battery, and latency have not been measured."],"source_documents":[{"label":"Category benchmark notes","href":"../category-benchmark-refresh.md"},{"label":"Parser audit notes","href":"../parser-review-audit.md"},{"label":"Contribute examples","href":"../data-contributions.md"}]}</script>
+  <script>
+    (function () {
+      'use strict';
+      var data = JSON.parse(document.getElementById('report-data').textContent);
+      var state = {policy: 'raw', scope: 'mixed', version: 'after'};
+      var body = document.getElementById('result-body');
+      var button = document.getElementById('theme-button');
+      function theme(value) {
+        document.documentElement.dataset.theme = value;
+        var next = value === 'dark' ? 'Light appearance' : 'Dark appearance';
+        button.textContent = next; button.setAttribute('aria-label', 'Use ' + next.toLowerCase());
+      }
+      var saved = null;
+      try { saved = localStorage.getItem('sorted-report-theme'); } catch (_) {}
+      theme(saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+      button.addEventListener('click', function () {
+        var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        theme(next); try { localStorage.setItem('sorted-report-theme', next); } catch (_) {}
+      });
+      document.getElementById('print-button').addEventListener('click', function () { window.print(); });
+      function node(tag, text, className) {
+        var e = document.createElement(tag);
+        if (text !== undefined && text !== null) e.textContent = text;
+        if (className) e.className = className;
+        return e;
+      }
+      function precision(m) {
+        return m.suggestions ? (100 * m.correct_suggestions / m.suggestions).toFixed(1) + '%' : '—';
+      }
+      function render() {
+        body.replaceChildren();
+        data.systems.forEach(function (s) {
+          var version = s.versions[state.version];
+          var m = version.scopes[state.scope][state.policy];
+          var tr = node('tr'); tr.dataset.system = s.id;
+          if (s.group === 'source_context') tr.className = 'context-row';
+          var cell = node('th', null, 'system'); cell.scope = 'row';
+          cell.appendChild(node('strong', s.label));
+          if (s.group === 'source_context') cell.appendChild(node('span', 'More context', 'context-label'));
+          cell.appendChild(node('small', s.inputs));
+          var bar = node('div', null, 'result-bar'); bar.setAttribute('aria-hidden', 'true');
+          var correct = node('span', null, 'bar-correct'); correct.style.width = (100 * m.correct_suggestions / m.records) + '%';
+          var wrong = node('span', null, 'bar-wrong'); wrong.style.width = (100 * m.wrong_suggestions / m.records) + '%';
+          bar.append(correct, wrong); cell.appendChild(bar);
+          var toggle = node('button', 'Check this result', 'explain-button'); toggle.type = 'button';
+          var detailId = 'detail-' + s.id; toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', detailId);
+          cell.appendChild(toggle); tr.appendChild(cell);
+          [m.correct_suggestions, m.wrong_suggestions, m.records - m.suggestions, precision(m)].forEach(function (value) { tr.appendChild(node('td', String(value), 'num')); });
+          var detail = node('tr', null, 'detail-row'); detail.id = detailId; detail.hidden = true;
+          var explanation = node('td'); explanation.colSpan = 5;
+          var thresholdText = state.policy === 'raw' ? 'No threshold applied.' : version.threshold > 1 ? 'Validation gate unmet: request review for every input.' : 'Validation-selected threshold: ' + version.threshold + '.';
+          explanation.textContent = m.suggestions + ' suggestions out of ' + m.records + ' examples (' + (100 * m.suggestions / m.records).toFixed(1) + '% coverage). ' +
+            m.correct_suggestions + ' correct + ' + m.wrong_suggestions + ' wrong = ' + m.suggestions + ' suggestions. ' +
+            (m.records - m.suggestions) + ' examples request review. ' + thresholdText +
+            ' This subset contains ' + m.known_category_records + ' category targets and ' + m.source_insufficient_records + ' source-insufficient targets; ' +
+            m.false_suggestions_on_source_insufficient_records + ' source-insufficient examples received suggestions.' +
+            (s.group === 'source_context' ? ' Uses full message context, so this is a separate diagnostic from merchant-only models.' : '');
+          if (m.precision_wilson_95_interval) explanation.textContent += ' Approximate Wilson 95% precision interval: ' +
+            (100 * m.precision_wilson_95_interval[0]).toFixed(1) + '–' + (100 * m.precision_wilson_95_interval[1]).toFixed(1) + '%.';
+          detail.appendChild(explanation);
+          toggle.addEventListener('click', function () { detail.hidden = !detail.hidden; toggle.setAttribute('aria-expanded', String(!detail.hidden)); toggle.textContent = detail.hidden ? 'Check this result' : 'Hide details'; });
+          body.append(tr, detail);
+        });
+        var count = state.scope === 'mixed' ? 97 : 22;
+        var caption = (state.policy === 'raw' ? 'Raw diagnostic' : 'Validation gate') + ' · ' +
+          (state.version === 'after' ? 'after fixes' : 'before fixes') + ' · ' + count + ' ' +
+          (state.scope === 'mixed' ? 'test examples, mixed label quality' : 'user-reviewed targets');
+        document.getElementById('result-caption').textContent = caption;
+        document.getElementById('result-status').textContent = caption;
+        document.getElementById('policy-note').textContent = state.policy === 'raw' ?
+          'Raw suggestions expose mistakes. No confidence threshold is used here; these are not proposed automatic decisions.' :
+          'Thresholds were chosen using validation only: target 90% precision and at least five suggestions. If the gate was unmet, the system requests review for every input.';
+      }
+      document.querySelectorAll('[data-policy]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          state.policy = b.dataset.policy;
+          document.querySelectorAll('[data-policy]').forEach(function (other) { other.setAttribute('aria-pressed', String(other === b)); });
+          render();
+        });
+      });
+      document.getElementById('scope').addEventListener('change', function (e) { state.scope = e.target.value; render(); });
+      document.getElementById('version').addEventListener('change', function (e) { state.version = e.target.value; render(); });
+      render();
+    }());
+  </script>
+</body>
+</html>

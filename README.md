@@ -176,6 +176,25 @@ Avoid installing into a work profile unless you explicitly need to test that pro
 - Do not commit `android/local.properties`, databases, APKs, secrets, keystores, or OAuth client files.
 - Run `gradle :app:assembleDebug` before pushing app changes.
 
+## Test Results And Data Contributions
+
+- [Local intelligence results — standalone HTML](docs/reports/local-model-results.html)
+- [Category benchmark notes](docs/category-benchmark-refresh.md)
+- [Contributor guide](CONTRIBUTING.md)
+- [How to contribute public-safe examples](docs/data-contributions.md)
+
+Download/open the HTML locally for the interactive report; GitHub displays its
+source. It includes aggregate results and limitations, with no private messages.
+To regenerate it from the checked-in aggregate JSON and template:
+
+```sh
+python3 scripts/build_benchmark_report.py
+```
+
+Data contributions use a documented JSONL format, synthetic examples, and a local
+validator. Keep personal originals out of Git; drafts and reserved evaluation
+examples are never automatically added to training.
+
 ## Working Tagline
 
 Sorted - your transactions, categorized privately.

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.test/sorted/transaction-example.schema.json",
+  "title": "Sorted public data contribution, version 1",
+  "description": "A sanitized candidate example. Validation is not privacy certification or approval for training.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "origin", "source", "language", "sender_family", "message", "groups", "expected", "evidence", "review", "privacy", "permissions", "notes"],
+  "properties": {
+    "schema_version": {"type": "integer", "enum": [1]},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{2,79}$"},
+    "origin": {"type": "string", "enum": ["synthetic", "sanitized_real"]},
+    "source": {"type": "string", "enum": ["sms", "email"]},
+    "language": {"type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"},
+    "sender_family": {"type": ["string", "null"], "minLength": 1, "maxLength": 100},
+    "message": {"type": "string", "minLength": 10, "maxLength": 6000},
+    "groups": {"$ref": "#/$defs/groups"},
+    "expected": {"$ref": "#/$defs/expected"},
+    "evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}},
+    "review": {"$ref": "#/$defs/review"},
+    "privacy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sanitized", "no_secrets", "no_personal_identifiers"],
+      "properties": {
+        "sanitized": {"type": "boolean", "enum": [true]},
+        "no_secrets": {"type": "boolean", "enum": [true]},
+        "no_personal_identifiers": {"type": "boolean", "enum": [true]}
+      }
+    },
+    "permissions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["public_share", "training_allowed"],
+      "properties": {
+        "public_share": {"type": "boolean", "enum": [true]},
+        "training_allowed": {"type": "boolean"}
+      }
+    },
+    "notes": {"type": "string", "minLength": 1, "maxLength": 1200}
+  },
+  "$defs": {
+    "nullable_text": {"type": ["string", "null"], "minLength": 1, "maxLength": 120},
+    "groups": {
+      "type": "object", "additionalProperties": false,
+      "required": ["template_family", "merchant_family", "event_group", "variant_of"],
+      "properties": {
+        "template_family": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{2,99}$"},
+        "merchant_family": {"$ref": "#/$defs/nullable_text"},
+        "event_group": {"$ref": "#/$defs/nullable_text"},
+        "variant_of": {"$ref": "#/$defs/nullable_text"}
+      }
+    },
+    "expected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bank_cash_movement", "status", "direction", "merchant", "amount", "currency", "date", "time", "payment_mode", "transaction_type", "category_status", "category", "category_basis", "context_required", "evidence_source"],
+      "properties": {
+        "bank_cash_movement": {"type": "string", "enum": ["confirmed", "not_confirmed", "unclear"]},
+        "status": {"type": "string", "enum": ["completed", "pending", "failed", "ignored", "unknown"]},
+        "direction": {"type": "string", "enum": ["debit", "credit", "unknown"]},
+        "merchant": {"$ref": "#/$defs/nullable_text"},
+        "amount": {"type": ["number", "null"], "minimum": 0},
+        "currency": {"type": ["string", "null"], "pattern": "^[A-Z]{3}$"},
+        "date": {"type": ["string", "null"], "format": "date"},
+        "time": {"type": ["string", "null"], "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$"},
+        "payment_mode": {"type": "string", "enum": ["upi", "upi_mandate", "card", "net_banking", "neft", "imps", "rtgs", "nach", "ecs", "bank_transfer", "atm", "cheque", "cash", "wallet", "ppi", "billpay", "payment_gateway", "fastag", "provident_fund", "unknown"]},
+        "transaction_type": {"type": "string", "enum": ["expense", "income", "refund", "transfer", "investment", "subscription", "reward", "unknown"]},
+        "category_status": {"type": "string", "enum": ["category", "abstain", "not_applicable"]},
+        "category": {"type": ["string", "null"], "enum": ["Food", "Groceries", "Shopping", "Transport", "Fuel", "Utilities", "Rent", "Subscriptions", "Entertainment", "Health", "Education", "Travel", "Fees", "Investment", "Transfer", "Income", "Refund", "Reward", "Other", null]},
+        "category_basis": {"type": "string", "enum": ["source_explicit", "merchant_policy", "insufficient", "not_applicable"]},
+        "context_required": {"type": "boolean"},
+        "evidence_source": {"type": "string", "enum": ["account_alert", "payment_confirmation", "provider_confirmation", "unknown"]}
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false, "required": ["field", "text"],
+      "properties": {
+        "field": {"type": "string", "enum": ["bank_cash_movement", "status", "direction", "merchant", "amount", "currency", "date", "time", "payment_mode", "transaction_type", "category"]},
+        "text": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "review": {
+      "type": "object", "additionalProperties": false, "required": ["status", "method", "fields"],
+      "properties": {
+        "status": {"type": "string", "enum": ["draft", "human_reviewed"]},
+        "method": {"type": "string", "enum": ["human_draft", "assistant_draft", "human_review", "assistant_then_human"]},
+        "fields": {
+          "type": "array", "uniqueItems": true,
+          "items": {"type": "string", "enum": ["bank_cash_movement", "status", "direction", "merchant", "amount", "currency", "date", "time", "payment_mode", "transaction_type", "category_status", "category", "category_basis", "context_required", "evidence_source"]}
+        }
+      }
+    }
+  }
+}

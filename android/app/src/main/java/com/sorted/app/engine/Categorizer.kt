@@ -5,6 +5,20 @@ object Categorizer {
         val raw = MerchantNormalizer.normalize(facts.merchantRaw).orEmpty()
         val key = raw.uppercase()
 
+        // A confirmed refund from a software merchant is still a refund; a broker's
+        // settlement is still a transfer. Do not let merchant rules overwrite source facts.
+        val explicitCategory = when (facts.transactionTypeHint) {
+            TransactionType.REFUND -> "Refund".takeIf { facts.direction == Direction.CREDIT }
+            TransactionType.INCOME -> "Income".takeIf { facts.direction == Direction.CREDIT }
+            TransactionType.TRANSFER -> "Transfer".takeIf { facts.direction != Direction.UNKNOWN }
+            TransactionType.INVESTMENT -> "Investment".takeIf { facts.direction == Direction.DEBIT }
+            else -> null
+        }
+        if (explicitCategory != null) {
+            return generic(raw.takeIf(String::isNotBlank), explicitCategory, explicitCategory, facts.transactionTypeHint!!)
+                .copy(confidence = 0.92)
+        }
+
         merchantRule(key)?.let {
             return it.copy(confidence = 0.95)
         }

@@ -104,6 +104,62 @@ class CategorySuggestionTest {
     }
 
     @Test
+    fun `related merchants need two independent correction examples`() {
+        val category = SuggestedCategory("Groceries", "Groceries", TransactionType.EXPENSE)
+        val input = CategorySuggestionInput("Bluebird Market Outlet", direction = Direction.DEBIT)
+        val oneCorrection = LocalCorrectionCategorySuggestionEngine(
+            listOf(LocalCategoryCorrectionExample("Bluebird Market Cafe", category))
+        )
+        val twoCorrections = LocalCorrectionCategorySuggestionEngine(
+            listOf(
+                LocalCategoryCorrectionExample("Bluebird Market Cafe", category),
+                LocalCategoryCorrectionExample("Bluebird Market Kitchen", category)
+            )
+        )
+
+        assertTrue(oneCorrection.suggest(input) is CategorySuggestionResult.Abstained)
+        val suggestion = twoCorrections.suggest(input) as CategorySuggestionResult.Suggested
+        assertEquals(category, suggestion.category)
+        assertEquals(CategorySuggestionSource.LOCAL_CORRECTION_EXAMPLES, suggestion.source)
+        assertTrue(suggestion.confidence in 0.78..0.92)
+    }
+
+    @Test
+    fun `related merchant learner ignores a single generic token and competing categories`() {
+        val groceries = SuggestedCategory("Groceries", "Groceries", TransactionType.EXPENSE)
+        val conflictedExamples = listOf(
+            LocalCategoryCorrectionExample("Bluebird Market Cafe", groceries),
+            LocalCategoryCorrectionExample("Bluebird Market Kitchen", groceries),
+            LocalCategoryCorrectionExample("Bluebird Market Outlet", SuggestedCategory("Home supplies", "Shopping", TransactionType.EXPENSE)),
+            LocalCategoryCorrectionExample("Bluebird Market Store", SuggestedCategory("Home supplies", "Shopping", TransactionType.EXPENSE))
+        )
+        val learner = LocalCorrectionCategorySuggestionEngine(conflictedExamples)
+
+        assertTrue(learner.suggest(CategorySuggestionInput("Cafe Downtown")) is CategorySuggestionResult.Abstained)
+        assertTrue(learner.suggest(CategorySuggestionInput("Bluebird Market Hub")) is CategorySuggestionResult.Abstained)
+    }
+
+    @Test
+    fun `similarity learning remains isolated across device profiles`() {
+        val input = CategorySuggestionInput("Bluebird Market Outlet", direction = Direction.DEBIT)
+        fun profile(category: SuggestedCategory) = LocalCorrectionCategorySuggestionEngine(
+            listOf(
+                LocalCategoryCorrectionExample("Bluebird Market Cafe", category),
+                LocalCategoryCorrectionExample("Bluebird Market Kitchen", category)
+            )
+        )
+        val firstProfile = profile(SuggestedCategory("Groceries", "Groceries", TransactionType.EXPENSE))
+        val secondProfile = profile(SuggestedCategory("Home supplies", "Shopping", TransactionType.EXPENSE))
+
+        val first = firstProfile.suggest(input) as CategorySuggestionResult.Suggested
+        val second = secondProfile.suggest(input) as CategorySuggestionResult.Suggested
+
+        assertEquals("Groceries", first.category.departmentCategory)
+        assertEquals("Shopping", second.category.departmentCategory)
+        assertEquals("Groceries", (firstProfile.suggest(input) as CategorySuggestionResult.Suggested).category.departmentCategory)
+    }
+
+    @Test
     fun `evaluator reports coverage selective accuracy and per-category precision`() {
         val food = SuggestedCategory("Food", "Food", TransactionType.EXPENSE)
         val examples = listOf(

@@ -5,6 +5,7 @@ import com.sorted.app.engine.Direction
 import com.sorted.app.engine.PaymentMode
 import com.sorted.app.engine.TransactionStatus
 import com.sorted.app.engine.TransactionType
+import com.sorted.app.engine.TransactionEvidenceSource
 
 data class TransactionEntity(
     val id: Long,
@@ -28,5 +29,6 @@ data class TransactionEntity(
     val categorySource: CategorySource,
     val confidence: Double,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val evidenceSource: TransactionEvidenceSource = TransactionEvidenceSource.ACCOUNT_ALERT
 )

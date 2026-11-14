@@ -263,7 +263,7 @@ private const val LogTag = "Sorted"
 private const val SmsSyncPreferencesName = "sms_sync"
 private const val SmsLastSyncAtKey = "last_successful_sync_at"
 private const val SmsParserRevisionKey = "parser_revision"
-private const val SmsParserRevision = 2
+private const val SmsParserRevision = 4
 private const val SmsSyncOverlapMillis = 7L * 24L * 60L * 60L * 1000L
 
 private data class SmsInboxMessage(

@@ -54,7 +54,8 @@ object SmsParser {
                 // this the generic path reported a flat 0.86 regardless of how weak its
                 // evidence was, so ImportDecisionPolicy could never act on a poor score.
                 else -> genericEvidenceConfidence(facts.amountScore)
-            }
+            },
+            evidenceSource = facts.evidenceSource
         )
     }
 
@@ -69,6 +70,29 @@ object SmsParser {
         val template: String
         val facts: ParserFacts?
         when {
+            Regex("""(?i)^AutoPay\s*\(E-mandate\)\s*Success!""").containsMatchIn(cleaned) -> {
+                template = "executed_autopay"; facts = parseExecutedAutopay(cleaned)
+            }
+            cleaned.contains("successfully processed payment", ignoreCase = true) &&
+                cleaned.contains("Standing Instruction", ignoreCase = true) -> {
+                template = "standing_instruction_payment"; facts = parseStandingInstructionPayment(cleaned)
+            }
+            Regex("""(?i)\bsettlement:\s*Transfer successful from\b""").containsMatchIn(cleaned) -> {
+                template = "provider_settlement"; facts = parseProviderSettlement(cleaned)
+            }
+            hasConfirmedCardRefund(cleaned) -> {
+                template = "confirmed_card_refund"; facts = parseConfirmedCardRefund(cleaned)
+            }
+            Regex("""(?is)\bdividend\b.*\bhas been credited\s+(?:into|to)\s+your bank account\b""").containsMatchIn(cleaned) -> {
+                template = "dividend_credit"; facts = parseDividendCredit(cleaned)
+            }
+            Regex("""(?is)\b(?:Multi Option Dep\s*\(FD\)|Fixed Deposit).*\bcreated\b.*\bAuto Sweep out\b""").containsMatchIn(cleaned) -> {
+                template = "fixed_deposit_sweep"; facts = parseFixedDepositSweep(cleaned)
+            }
+            Regex("""(?i)^Spent\s+Rs\.?""").containsMatchIn(cleaned) &&
+                Regex("""(?i)\bCard\s*\S+\s+At\b.*\bOn\s+\d{4}-\d{2}-\d{2}""").containsMatchIn(cleaned) -> {
+                template = "dated_card_spend"; facts = parseDatedCardSpend(cleaned)
+            }
             cleaned.contains("spent using ICICI Bank Card", ignoreCase = true) -> {
                 template = "icici_card_spend"; facts = parseIciciCardSpend(cleaned)
             }
@@ -188,7 +212,7 @@ object SmsParser {
 
     private fun parsePnbUpiDebit(message: String): ParserFacts? {
         val regex = Regex(
-            """A/c\s+(\S+)\s+debited\s+INR\s+([\d,]+(?:\.\d+)?)\s+Dt\s+(\d{2}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+to\s+(.+?)\s+thru\s+UPI""",
+            """A/c\s+(\S+)\s+debited\s+INR\s+([\d,]+(?:\.\d+)?)\s+Dt\s+(\d{2}-\d{2}-\d{2})\s+(\d{2}:\d{2}(?::\d{2})?)(?:\s+to\s+(.+?))?\s+thru\s+UPI\b""",
             RegexOption.IGNORE_CASE
         )
         val match = regex.find(message) ?: return null
@@ -196,7 +220,7 @@ object SmsParser {
             amount = parseAmount(match.groupValues[2]),
             currency = "INR",
             direction = Direction.DEBIT,
-            merchantRaw = match.groupValues[5].trim(),
+            merchantRaw = match.groupValues[5].trim().takeIf(String::isNotBlank),
             paymentMode = PaymentMode.UPI,
             accountHint = match.groupValues[1],
             transactionDate = parseDate(match.groupValues[3]),
@@ -281,6 +305,77 @@ object SmsParser {
             transactionTime = null
         )
     }
+
+    private fun parseExecutedAutopay(message: String): ParserFacts? {
+        val amount = Regex("""(?im)^Txn\s+Amt:\s*([A-Z]{3})\s*([\d,]+(?:\.\d+)?)(?:\s|$)""").find(message) ?: return null
+        val merchant = Regex("""(?im)^For(?:\s*:\s*|\s+)(.+)$""").find(message)?.groupValues?.get(1)?.trim() ?: return null
+        val date = Regex("""(?im)^Dt:\s*(\d{1,2}/\d{1,2}/\d{2,4})""").find(message)?.groupValues?.get(1)?.let(::parseDate)
+        return ParserFacts(parseAmount(amount.groupValues[2]), amount.groupValues[1].uppercase(), Direction.DEBIT,
+            merchant, PaymentMode.CARD, parseGenericAccountHint(message), date, null,
+            evidenceSource = TransactionEvidenceSource.PAYMENT_CONFIRMATION)
+    }
+
+    private fun parseStandingInstructionPayment(message: String): ParserFacts? {
+        val match = Regex("""(?is)successfully processed payment of\s+([A-Z]{3})\s*([\d,]+(?:\.\d+)?)\s+to Merchant\s+(.+?),\s+as per Standing Instruction\b""").find(message) ?: return null
+        return ParserFacts(parseAmount(match.groupValues[2]), match.groupValues[1].uppercase(), Direction.DEBIT,
+            match.groupValues[3].trim(), PaymentMode.CARD, parseGenericAccountHint(message), parseGenericDate(message), null,
+            evidenceSource = TransactionEvidenceSource.PAYMENT_CONFIRMATION)
+    }
+
+    private fun parseProviderSettlement(message: String): ParserFacts? {
+        val merchant = Regex("""(?im)\bsettlement:\s*Transfer successful from\s+(.+)$""").find(message)?.groupValues?.get(1)?.trim() ?: return null
+        val amount = Regex("""(?im)^Amount:\s*(INR|Rs\.?|₹)\s*([\d,]+(?:\.\d+)?)\s*$""").find(message) ?: return null
+        val bank = Regex("""(?im)^Bank:\s+.+?\(([Xx*]+\d{3,6})\)\s*$""").find(message) ?: return null
+        return ParserFacts(parseAmount(amount.groupValues[2]), "INR", Direction.CREDIT, merchant,
+            PaymentMode.BANK_TRANSFER, bank.groupValues[1].maskedAccountHint(), parseGenericDate(message), null,
+            transactionTypeHint = TransactionType.TRANSFER,
+            evidenceSource = TransactionEvidenceSource.PROVIDER_CONFIRMATION)
+    }
+
+    private fun hasConfirmedCardRefund(message: String): Boolean =
+        Regex("""(?is)\brefund of\s+(?:Rs\.?|INR|₹)\s*[\d,.]+\s+credited to\s+(?:your\s+)?[^\n]*\b(?:credit\s+)?card\b""").containsMatchIn(message) ||
+            Regex("""(?is)\b(?:Rs\.?|INR|₹)\s*[\d,.]+\s+refunded by\s+.+?\s+on\s+.+?\s*(?:&|and)\s*adjusted against\s+.+?\bcard\b""").containsMatchIn(message)
+
+    private fun parseConfirmedCardRefund(message: String): ParserFacts? {
+        val direct = Regex("""(?is)^(.+?)\s+refund of\s+(Rs\.?|INR|₹)\s*([\d,]+(?:\.\d+)?)\s+credited to\b""").find(message)
+        val adjustment = Regex("""(?is)\b(Rs\.?|INR|₹)\s*([\d,]+(?:\.\d+)?)\s+refunded by\s+(.+?)\s+on\s+(\d{1,2}/[A-Za-z]{3,9}/\d{4})\s*(?:&|and)\s*adjusted against\b""").find(message)
+        val amount = direct?.groupValues?.get(3) ?: adjustment?.groupValues?.get(2) ?: return null
+        val merchant = direct?.groupValues?.get(1) ?: adjustment!!.groupValues[3]
+        val date = adjustment?.groupValues?.get(4)?.replace('/', '-')?.let(::parseDate) ?: parseGenericDate(message)
+        return ParserFacts(parseAmount(amount), "INR", Direction.CREDIT, merchant.trim(), PaymentMode.CARD,
+            parseGenericAccountHint(message), date, null, transactionTypeHint = TransactionType.REFUND)
+    }
+
+    private fun parseDividendCredit(message: String): ParserFacts? {
+        val merchant = Regex("""(?is)\bby\s+(.+?)\s+has been credited\s+(?:into|to)\s+your bank account\b""").find(message)?.groupValues?.get(1)?.trim() ?: return null
+        val figure = Regex("""(?i)\bdividend(?:\s+amount)?\s+(?:of\s+)?(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d+)?)""").find(message)
+        val amount = figure?.takeUnless { isPerShareFigure(message, it.range.last + 1) }?.groupValues?.get(1)?.let(::parseAmount)
+        // A per-share rate does not disclose the customer's holding or total credit.
+        return ParserFacts(amount, "INR", Direction.CREDIT, merchant, PaymentMode.BANK_TRANSFER,
+            parseGenericAccountHint(message), parseGenericDate(message), null,
+            transactionTypeHint = TransactionType.INCOME, evidenceSource = TransactionEvidenceSource.PROVIDER_CONFIRMATION)
+    }
+
+    private fun parseFixedDepositSweep(message: String): ParserFacts? {
+        val match = Regex("""(?is)\b(Multi Option Dep\s*\(FD\)|Fixed Deposit)\s+of\s+(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d+)?)\s+created\s+on\s+(\d{1,2}/\d{1,2}/\d{2,4})\s+by Auto Sweep out of\s+your SB A/c\s+([Xx*]*\d+)""").find(message) ?: return null
+        return ParserFacts(parseAmount(match.groupValues[2]), "INR", Direction.DEBIT, match.groupValues[1],
+            PaymentMode.BANK_TRANSFER, match.groupValues[4].maskedAccountHint(), parseDate(match.groupValues[3]), null,
+            transactionTypeHint = TransactionType.INVESTMENT)
+    }
+
+    private fun parseDatedCardSpend(message: String): ParserFacts? {
+        val match = Regex("""(?is)^Spent\s+Rs\.?\s*([\d,]+(?:\.\d+)?)\s+On\s+.+?\bCard\s*(\S+)\s+At\s+(.+?)\s+On\s+(\d{4}-\d{2}-\d{2})(?::(\d{2}:\d{2}:\d{2}))?(?=\s|[.,]|$)""").find(message) ?: return null
+        return ParserFacts(parseAmount(match.groupValues[1]), "INR", Direction.DEBIT, match.groupValues[3].trim(),
+            PaymentMode.CARD, match.groupValues[2].maskedAccountHint(), match.groupValues[4], match.groupValues[5].takeIf(String::isNotBlank))
+    }
+
+    private fun String.maskedAccountHint(): String? {
+        val digits = filter(Char::isDigit)
+        return digits.takeIf { it.length >= 3 }?.takeLast(4)?.let { "XX$it" }
+    }
+
+    private fun isPerShareFigure(message: String, end: Int): Boolean =
+        Regex("""(?i)^\s*(?:per\s+share|/\s*share|each\s+share)\b""").containsMatchIn(message.substring(end))
 
     private fun parseGenericFinancialAlert(message: String, sourceAddress: String?): ParserFacts? {
         if (!looksLikeFinancialAlert(message, sourceAddress)) return null
@@ -463,6 +558,7 @@ object SmsParser {
         val prefixed = Regex("""(?i)(?:INR|Rs\.?|₹)\s*([\d,]+(?:\.\d+)?)""")
             .findAll(message)
             .mapNotNull { match ->
+                if (isPerShareFigure(message, match.range.last + 1)) return@mapNotNull null
                 val amount = parseAmountOrNull(match.groupValues.getOrNull(1).orEmpty())
                     ?: return@mapNotNull null
                 val score = amountContextScore(message, match.range.first, direction)
@@ -477,6 +573,7 @@ object SmsParser {
         val bare = Regex("""(?<![\d.])(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})|\d{1,10}\.\d{1,2})(?!\d)""")
             .findAll(message)
             .mapNotNull { match ->
+                if (isPerShareFigure(message, match.range.last + 1)) return@mapNotNull null
                 val raw = match.groupValues[1]
                 val amount = parseAmountOrNull(raw) ?: return@mapNotNull null
                 // Guard against ref numbers: amounts rarely exceed 1e8 and never go below 0.
@@ -619,12 +716,12 @@ object SmsParser {
 
     private fun parseGenericAccountHint(message: String): String? {
         val patterns = listOf(
-            Regex("""(?i)\b(?:a/c|account)(?:\s+no)?\s*([Xx*]*\d{3,6})"""),
-            Regex("""(?i)\b(?:card|cc|dc)\s*([Xx*]*\d{3,6})"""),
-            Regex("""(?i)\b(?:ending|xx|\*)\s*(\d{3,6})""")
+            Regex("""(?i)\b(?:a/c|account)(?:\s+no)?\s*([Xx*]*\d{3,})"""),
+            Regex("""(?i)\b(?:card|cc|dc)\s*([Xx*]*\d{3,})"""),
+            Regex("""(?i)\b(?:ending|xx|\*)\s*(\d{3,})""")
         )
         return patterns.firstNotNullOfOrNull { pattern ->
-            pattern.find(message)?.groupValues?.get(1)
+            pattern.find(message)?.groupValues?.get(1)?.maskedAccountHint()
         }
     }
 
@@ -633,7 +730,7 @@ object SmsParser {
             .find(message)
             ?.let { return "${it.groupValues[1]}-${it.groupValues[2].pad2()}-${it.groupValues[3].pad2()}" }
 
-        Regex("""\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b""")
+        Regex("""\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b""")
             .find(message)
             ?.let {
                 val year = it.groupValues[3].normalizeYear()
@@ -681,7 +778,25 @@ object SmsParser {
             "cred"
         ).any { it in sender }
 
+        val accountMovement = hasSettledAccountEvidence(message)
+        val billNotice = Regex("""(?i)\b(?:bill|invoice|statement)\b""").containsMatchIn(message) &&
+            Regex("""(?i)generated|payable|\bdue\b|outstanding""").containsMatchIn(message)
+        val pendingRefund = Regex("""(?is)\brefund\b.{0,160}\b(?:initiated|processed|reference number)\b""").containsMatchIn(message) &&
+            !hasConfirmedCardRefund(message) &&
+            !Regex("""(?is)\brefund\b.{0,100}\bcredited\s+(?:into|to)\s+(?:your\s+)?(?:bank\s+)?(?:account|a/c)\b""").containsMatchIn(message)
+
         return when {
+            "consent requested" in lower || "authenticate via otp" in lower -> "consent_request"
+            // Authentication secrets and gift-card credentials never become payments.
+            "one-time password" in lower || Regex("""(?i)\botp\b|\b(?:single[- ]use|verification|authentication)\s+(?:code|password|passcode)\b""").containsMatchIn(message) -> "otp"
+            Regex("""(?i)gift\s+(?:card\s+)?(?:code|pin|number)\s*[:\-]""").containsMatchIn(message) && !accountMovement -> "gift_card_notice"
+            Regex("""(?is)\bcredited\s*:\s*(?:Rs\.?|INR|₹)""").containsMatchIn(message) &&
+                Regex("""(?i)redeem|minimum purchase|min purchase|online exclusive""").containsMatchIn(message) && !accountMovement -> "promotional_offer"
+            billNotice && !accountMovement -> "bill_due"
+            Regex("""(?is)\bmandate\b.{0,120}(?:successfully\s+)?cancelled|\bcancelled\b.{0,100}\bmandate\b""").containsMatchIn(message) -> "consent_request"
+            Regex("""(?i)\bmandate (?:has been )?(?:successfully )?set\b|\bmandate created\b|\bmandate\b.{0,70}successfully created|activated standing instruction|NACH Mandate.*received today for processing""").containsMatchIn(message) &&
+                "upcoming" !in lower && "will be debited" !in lower && "will be deducted" !in lower -> "consent_request"
+            pendingRefund -> "pending"
             "shop now" in lower &&
                 Regex("""(?i)(?:https?://|www\.)""").containsMatchIn(lower) &&
                 !Regex("""(?i)\b(?:debited|credited|spent using|deducted from|sent rs|transaction successful|payment successful)\b""").containsMatchIn(lower) -> "promotional_link"
@@ -696,7 +811,7 @@ object SmsParser {
             // The language that distinguishes a real cashback credit — "has been credited to",
             // "is credited to", "credited to your", "credited to a/c" — is explicitly excluded.
             Regex("""(?i)(?:enjoy|get|earn|avail|unlock|up to|flat)\s+(?:up to\s+)?rs\.?\s*[\d,]+(?:\.\d+)?\*?\s+cashback""").containsMatchIn(lower) &&
-                !Regex("""(?i)(?:has been|is)\s+credited\s+(?:to|in|with)\s+(?:your|the|a/c)""").containsMatchIn(lower) -> "promotional_offer"
+                !accountMovement && !Regex("""(?i)(?:has been|is)\s+credited\s+(?:to|in|with)\s+(?:your|the|a/c)""").containsMatchIn(lower) -> "promotional_offer"
 
             // A "shop ..." / "use code ..." / "coupon ..." construct with a currency figure
             // but no settled wording is a promo. The literal word "credited" can appear in
@@ -704,7 +819,7 @@ object SmsParser {
             // caught by the "off" suffix check.
             (("use code" in lower || "coupon" in lower || "shop now" in lower || "shop at" in lower ||
                 "click here" in lower || "offer valid" in lower || "limited period" in lower) &&
-                !Regex("""(?i)(?:debited|spent|deducted|withdrawn|transferred|has been credited|is credited by)""").containsMatchIn(lower)) -> "promotional_offer"
+                !accountMovement && !Regex("""(?i)(?:debited|spent|deducted|withdrawn|transferred|has been credited|is credited by)""").containsMatchIn(lower)) -> "promotional_offer"
             Regex("""(?i)credited (?:to your cart|with (?:rs\.?\s*)?[\d,]+(?:\.\d+)?\*?\s*off)""").containsMatchIn(lower) -> "promotional_offer"
             Regex("""(?i)rs\.?\s*[\d,]+(?:\.\d+)?\s+off credited""").containsMatchIn(lower) -> "promotional_offer"
 
@@ -737,7 +852,6 @@ object SmsParser {
             Regex("""(?i)payment of (?:INR|Rs)\.?\s*[\d,.]+\s+towards your (?:ICICI|HDFC|SBI|Axis|Kotak|American Express|Amex|Bank)""").containsMatchIn(lower) -> "card_payment_ack"
             Regex("""(?i)we have received payment of rs\.?\s*[\d,.]+\s+via upi\s*&\s*the same has been credited to your (?:\w+ )?credit card""").containsMatchIn(lower) -> "card_payment_ack"
             Regex("""(?i)payment of (?:INR|Rs)\.?\s*[\d,.]+\s+has been received on your (?:ICICI|HDFC|SBI|Axis|Kotak|American Express|Amex|Bank)[^.]*\bcredit card""").containsMatchIn(lower) -> "card_payment_ack"
-            "consent requested" in lower || "authenticate via otp" in lower -> "consent_request"
             "mandate request" in lower && "debited" !in lower && "deducted" !in lower -> "consent_request"
             listOf("transaction cancelled", "transaction canceled", "payment cancelled", "payment canceled", "transaction voided", "payment voided")
                 .any { it in lower } -> "cancelled_transaction"
@@ -745,21 +859,32 @@ object SmsParser {
             "will be deducted" in lower || "will be debited" in lower || "will be credited" in lower || "upcoming mandate" in lower || "pre-debit" in lower -> "pending"
             "settlement worth" in lower || "settlement has been processed" in lower -> "pending"
             "sip installment" in lower || "sip instalment" in lower || "units are allotted" in lower -> "investment_allotment"
-            "one-time password" in lower || Regex("""\botp\b""").containsMatchIn(lower) -> "otp"
             "statement" in lower && listOf("debited", "credited", "spent", "deducted").none { it in lower } -> "statement"
-            "total amount due" in lower || "minimum amount due" in lower || "min amount due" in lower -> "bill_due"
-            "due for payment" in lower || ("pay by" in lower && "ignore if paid" in lower) -> "bill_due"
+            ("total amount due" in lower || "minimum amount due" in lower || "min amount due" in lower) && !accountMovement -> "bill_due"
+            ("due for payment" in lower || ("pay by" in lower && "ignore if paid" in lower)) && !accountMovement -> "bill_due"
             // "Last day to pay BESCOM bill of Rs 1667 ... Ignore if paid" — bill reminder with
             // a "to pay" preamble and an "Ignore if paid" footer. Guarded by "Ignore if paid"
             // so a genuine debit alert never matches.
             Regex("""(?i)\b(?:last day )?to pay\s+(?:your\s+)?[A-Za-z ]*bill\s+of\b""").containsMatchIn(lower) &&
                 "ignore if paid" in lower -> "bill_due"
-            "invoice" in lower && ("generated" in lower || "total due" in lower || "pay by" in lower) -> "bill_due"
-            "credited to your card" in lower || "received towards your credit card" in lower -> "card_payment_ack"
+            "invoice" in lower && ("generated" in lower || "total due" in lower || "pay by" in lower) && !accountMovement -> "bill_due"
+            ("credited to your card" in lower || "received towards your credit card" in lower) && !hasConfirmedCardRefund(message) -> "card_payment_ack"
             "we have received a payment" in lower && !senderLooksLikeBankOrPaymentApp -> "merchant_receipt"
             lower.startsWith("pf interest") && "epfo" in lower -> "unsupported"
             else -> null
         }
+    }
+
+    private fun hasSettledAccountEvidence(message: String): Boolean {
+        if (hasConfirmedCardRefund(message)) return true
+        // Word boundaries exclude "prepaid", "spends", and "cashback". Conditional
+        // boilerplate such as "ignore if paid" cannot establish completed movement.
+        val text = message.replace(Regex("""(?i)\bignore if (?:already )?paid\b"""), "")
+        val amount = """(?:INR|Rs\.?|₹)\s*[\d,]+(?:\.\d+)?"""
+        if (Regex("""(?is)\b(?:debited|deducted|withdrawn|spent)\b\s*(?:with\s+|by\s+|for\s+)?$amount|$amount\s+(?:has been\s+|is\s+)?(?:debited|deducted|withdrawn|spent|paid)\b""").containsMatchIn(text)) return true
+        return Regex("""(?i)\bcredited\b""").containsMatchIn(text) &&
+            Regex("""(?i)\b(?:a/c|account|card)\s*[Xx*]*\d{3,}\b""").containsMatchIn(text) &&
+            Regex("""(?i)\b(?:UPI|IMPS|NEFT|RTGS|UTR|Ref(?:erence)?)\b""").containsMatchIn(text)
     }
 
     private fun ignored(reason: String): ParsedTransaction {
@@ -863,29 +988,7 @@ object SmsParser {
         return if (length == 2) "20$this" else this
     }
 
-    private fun parseDate(value: String): String {
-        return when {
-            Regex("""\d{4}-\d{2}-\d{2}""").matches(value) -> value
-            Regex("""\d{2}/\d{2}/\d{2}""").matches(value) -> {
-                val (day, month, year) = value.split("/")
-                "20$year-$month-$day"
-            }
-            Regex("""\d{2}-\d{2}-\d{2}""").matches(value) -> {
-                val (day, month, year) = value.split("-")
-                "20$year-$month-$day"
-            }
-            Regex("""\d{2}-[A-Za-z]{3}-\d{2}""").matches(value) -> {
-                val (day, monthName, year) = value.split("-")
-                val month = monthNumber(monthName)
-                "20$year-$month-$day"
-            }
-            else -> value
-        }
-    }
-
-    private fun monthNumber(monthName: String): String {
-        return monthNumberOrNull(monthName) ?: "01"
-    }
+    private fun parseDate(value: String): String = parseGenericDate(value) ?: value
 
     private fun monthNumberOrNull(monthName: String): String? {
         val months = mapOf(

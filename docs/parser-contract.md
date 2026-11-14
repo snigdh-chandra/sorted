@@ -344,6 +344,9 @@ Rules:
 - Direction: `debit`
 - Payment mode: `upi`
 - Payee comes after `to` and before `thru UPI`
+- Some alerts omit `to <payee>`. Keep the debit amount, date, time, and account
+  in that case; leave the merchant unknown so categorization can be reviewed.
+- Accept transaction times with hours and minutes, with optional seconds.
 - Ignore balance
 
 ### SBI Income Tax Refund
@@ -412,4 +415,37 @@ The parser should not store:
 - OTPs
 
 Only masked account/card hints may be stored.
+
+## Confirmation Evidence and Review
+
+`evidenceSource` identifies the kind of source evidence:
+
+- `ACCOUNT_ALERT`: a bank/card posting alert (the default for existing records).
+- `PAYMENT_CONFIRMATION`: an executed autopay or standing-instruction payment.
+- `PROVIDER_CONFIRMATION`: a broker settlement or dividend notice.
+
+The parser describes what the message says. The SMS import layer additionally
+checks whether a confirmation could repeat an existing account alert. A completed
+payment confirmation with the same positive amount, currency, direction, account
+suffix, and date as a completed account alert is retained with status `unknown`
+for review. Missing payment identity also requires review. Neither record is
+merged or deleted by this check. A later account alert triggers the same check
+on stored confirmations; explicit user status corrections take priority.
+
+Provider confirmations remain available for review with status `unknown` until
+the user confirms the posting. A broker settlement is a transfer, rather than
+investment income. A dividend rate such as `Rs.1 per share` does not establish the
+total received: leave the amount null unless a total is explicitly stated.
+
+Confirmed card refunds retain their refund type even when the payee normally
+matches an expense or subscription category. Initiated/processed refund notices
+alone do not establish a completed credit. Refunds remain separate from spend.
+
+Generated bills, promotional vouchers, gift-card credentials, authentication
+codes, and mandate setup notices do not establish completed account movement.
+An actual debit or credit may still contain bill details or an offer in its footer.
+
+Database version 7 adds `evidence_source` without replacing transactions or user
+corrections. SMS parser revision 4 requests a full local SMS rescan on the next
+import so existing rows receive the updated interpretation.
 

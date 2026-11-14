@@ -42,6 +42,7 @@ class SortedDatabase(context: Context) : SQLiteOpenHelper(
                 status TEXT NOT NULL,
                 category_source TEXT NOT NULL,
                 confidence REAL NOT NULL,
+                evidence_source TEXT NOT NULL DEFAULT 'ACCOUNT_ALERT',
                 created_at INTEGER NOT NULL,
                 updated_at INTEGER NOT NULL
             )
@@ -165,10 +166,13 @@ class SortedDatabase(context: Context) : SQLiteOpenHelper(
         if (oldVersion in 4 until 6) {
             db.execSQL("ALTER TABLE user_corrections ADD COLUMN new_status TEXT")
         }
+        if (oldVersion < 7) {
+            db.execSQL("ALTER TABLE transactions ADD COLUMN evidence_source TEXT NOT NULL DEFAULT 'ACCOUNT_ALERT'")
+        }
     }
 
     private companion object {
         const val DatabaseName = "sorted.db"
-        const val DatabaseVersion = 6
+        const val DatabaseVersion = 7
     }
 }

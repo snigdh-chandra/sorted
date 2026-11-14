@@ -58,6 +58,13 @@ enum class CategorySource {
     NONE
 }
 
+/** A second confirmation may describe a payment already reported by an account alert. */
+enum class TransactionEvidenceSource {
+    ACCOUNT_ALERT,
+    PAYMENT_CONFIRMATION,
+    PROVIDER_CONFIRMATION
+}
+
 enum class ImportDecision {
     ACCEPT,
     REVIEW,
@@ -89,7 +96,8 @@ data class ParsedTransaction(
     val ignoreReason: String?,
     val note: String? = null,
     /** Confidence that this source record describes a completed financial movement. */
-    val evidenceConfidence: Double = confidence
+    val evidenceConfidence: Double = confidence,
+    val evidenceSource: TransactionEvidenceSource = TransactionEvidenceSource.ACCOUNT_ALERT
 )
 
 data class ParserFacts(
@@ -105,7 +113,10 @@ data class ParserFacts(
      * How well the surrounding text supports this figure being the transaction amount.
      * Only the generic parser infers an amount, so templates leave this null.
      */
-    val amountScore: Int? = null
+    val amountScore: Int? = null,
+    /** Explicit event meaning from the message, stronger than a recipient-name heuristic. */
+    val transactionTypeHint: TransactionType? = null,
+    val evidenceSource: TransactionEvidenceSource = TransactionEvidenceSource.ACCOUNT_ALERT
 )
 
 data class CategoryResult(

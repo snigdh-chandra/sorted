@@ -5,6 +5,8 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.sorted.app.engine.CategorySource
+import com.sorted.app.engine.ConfirmationEvidence
+import com.sorted.app.engine.ConfirmationReconciliation
 import com.sorted.app.engine.CategorySuggestionInput
 import com.sorted.app.engine.CategorySuggestionResult
 import com.sorted.app.engine.Direction
@@ -18,6 +20,7 @@ import com.sorted.app.engine.PaymentMode
 import com.sorted.app.engine.SuggestedCategory
 import com.sorted.app.engine.TransactionStatus
 import com.sorted.app.engine.TransactionType
+import com.sorted.app.engine.TransactionEvidenceSource
 import java.security.MessageDigest
 
 class TransactionRepository(context: Context) {
@@ -31,6 +34,21 @@ class TransactionRepository(context: Context) {
             val ignoredHashes = ignoredSourceHashes(db)
             val rules = categoryRules(db)
             val corrections = userCorrections(db)
+            val prepared = records.associate { record ->
+                record.sourceHash to record.parsed.applyCategoryRules(rules)
+                    .applyUserCorrection(corrections[record.sourceHash])
+            }
+            val existingSms = if (records.any { it.source == ImportSource.SMS }) {
+                db.query("transactions", null, "source = ?", arrayOf(ImportSource.SMS.value), null, null, null)
+                    .use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.toTransactionEntity()) } }
+            } else emptyList()
+            val accountAlerts = records.filter { it.source == ImportSource.SMS && it.sourceHash !in ignoredHashes }
+                .mapNotNull { record ->
+                    val parsed = prepared.getValue(record.sourceHash)
+                    if (ImportDecisionPolicy.assess(parsed).decision == ImportDecision.IGNORE) null
+                    else parsed.confirmationEvidence(record.sourceHash, record.sourceReceivedDate)
+                } + existingSms.filter { it.sourceHash !in prepared && it.sourceHash !in ignoredHashes }
+                    .map { it.confirmationEvidence() }
             records
                 .forEach { record ->
                     if (record.sourceHash in ignoredHashes) {
@@ -42,9 +60,14 @@ class TransactionRepository(context: Context) {
                         return@forEach
                     }
 
-                    val parsed = record.parsed
-                        .applyCategoryRules(rules)
-                        .applyUserCorrection(corrections[record.sourceHash])
+                    val originalParsed = prepared.getValue(record.sourceHash)
+                    val parsed = if (record.source == ImportSource.SMS) {
+                        originalParsed.copy(status = ConfirmationReconciliation.statusForImport(
+                            originalParsed.confirmationEvidence(record.sourceHash, record.sourceReceivedDate),
+                            accountAlerts,
+                            hasUserStatusCorrection = corrections[record.sourceHash]?.status != null
+                        ))
+                    } else originalParsed
                     val assessment = ImportDecisionPolicy.assess(parsed)
                     if (assessment.decision != ImportDecision.IGNORE) {
                         db.upsertTransaction(record, now, parsed)
@@ -54,6 +77,21 @@ class TransactionRepository(context: Context) {
                             "source_hash = ?",
                             arrayOf(record.sourceHash)
                         )
+                    }
+                }
+            // A confirmation may arrive before its account alert. Revisit stored
+            // confirmations when the later alert imports, preserving explicit user status.
+            existingSms.filter { it.sourceHash !in prepared && it.sourceHash !in ignoredHashes }
+                .forEach { existing ->
+                    val status = ConfirmationReconciliation.statusForImport(
+                        existing.confirmationEvidence(), accountAlerts,
+                        hasUserStatusCorrection = corrections[existing.sourceHash]?.status != null
+                    )
+                    if (status != existing.status) {
+                        db.update("transactions", ContentValues().apply {
+                            put("status", status.name)
+                            put("updated_at", now)
+                        }, "source_hash = ?", arrayOf(existing.sourceHash))
                     }
                 }
             db.setTransactionSuccessful()
@@ -292,6 +330,7 @@ class TransactionRepository(context: Context) {
             put("status", parsed.status.name)
             put("category_source", parsed.categorySource.name)
             put("confidence", parsed.confidence)
+            put("evidence_source", parsed.evidenceSource.name)
             put("created_at", now)
             put("updated_at", now)
         }
@@ -567,9 +606,18 @@ class TransactionRepository(context: Context) {
             categorySource = enumValueOrDefault(string("category_source"), CategorySource.NONE),
             confidence = doubleOrNull("confidence") ?: 0.0,
             createdAt = long("created_at"),
-            updatedAt = long("updated_at")
+            updatedAt = long("updated_at"),
+            evidenceSource = enumValueOrDefault(string("evidence_source"), TransactionEvidenceSource.ACCOUNT_ALERT)
         )
     }
+
+    private fun ParsedTransaction.confirmationEvidence(sourceHash: String, receivedDate: String?) = ConfirmationEvidence(
+        sourceHash, evidenceSource, status, amount, currency, direction, accountHint, transactionDate ?: receivedDate
+    )
+
+    private fun TransactionEntity.confirmationEvidence() = ConfirmationEvidence(
+        sourceHash, evidenceSource, status, amount, currency, direction, accountHint, transactionDate ?: sourceReceivedDate
+    )
 
     private fun Cursor.toCategoryRuleEntity(): CategoryRuleEntity {
         return CategoryRuleEntity(
